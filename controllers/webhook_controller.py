@@ -8,28 +8,29 @@ _logger = logging.getLogger(__name__)
 
 class PesquisaAiiaWebhook(http.Controller):
 
+    # type='json' JÁ faz o parse do JSON para request.jsonrequest
     @http.route('/pesquisa_aiia/webhook', type='json', auth='public', methods=['POST'], csrf=False)
-    def handle_webhook(self, **kwargs):
+    def handle_webhook(self): # Não precisa de **kwargs aqui se type='json'
         """
         Recebe os dados do N8N via JSON POST.
+        O decorador type='json' automaticamente parseia o corpo
+        e o coloca em request.jsonrequest.
         """
-        # CORREÇÃO AQUI: Usar request.httprequest.get_json_data()
-        try:
-            webhook_data = request.httprequest.get_json_data()
-        except Exception as e:
-             # Se o corpo não for JSON válido, get_json_data() pode dar erro
-             _logger.error("Webhook Pesquisa AIIA: Erro ao decodificar JSON - %s", str(e))
-             return {'status': 'error', 'message': 'Corpo da requisição não é JSON válido'}
+        webhook_data = request.jsonrequest # Deve funcionar com type='json'
 
-        _logger.info("Webhook Pesquisa AIIA Recebido: %s", json.dumps(webhook_data))
+        # Log para ver o que foi recebido *após* o parse automático do Odoo
+        _logger.info("Webhook Pesquisa AIIA Recebido (processado por type='json'): %s", json.dumps(webhook_data))
 
         # --- Validação de Segurança (Opcional, mas recomendado) ---
         secret = request.env['ir.config_parameter'].sudo().get_param('pesquisa_aiia.webhook_secret')
-        # Exemplo: Verificar um header ou um campo no JSON
+        # Exemplo: Verificar um header (acessado via request.httprequest.headers)
         # received_secret = request.httprequest.headers.get('X-N8N-Signature')
         # if secret and received_secret != secret:
         #     _logger.warning("Webhook Pesquisa AIIA: Segredo inválido recebido.")
-        #     return Response("Unauthorized", status=401) # Retorna erro HTTP correto
+        #     # Se type='json', retornar um dicionário é o padrão para erros
+        #     # Pode ser necessário gerar uma exceção para resultar em erro HTTP real
+        #     # raise werkzeug.exceptions.Unauthorized()
+        #     return {'status': 'error', 'message': 'Unauthorized'}
 
         # --- Validação dos Dados ---
         required_fields = ['nome_empresa', 'contato_telefonico', 'email', 'endereco', 'resumo_atividade']
@@ -56,7 +57,4 @@ class PesquisaAiiaWebhook(http.Controller):
         except Exception as e:
             _logger.exception("Webhook Pesquisa AIIA: Erro ao criar lead - %s", str(e))
             request.env.cr.rollback()
-            # Considerar retornar status HTTP 500 também
-            # return Response(json.dumps({'status': 'error', 'message': f'Erro interno do servidor: {str(e)}'}),
-            #                 content_type='application/json', status=500)
             return {'status': 'error', 'message': f'Erro interno do servidor: {str(e)}'}
