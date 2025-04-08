@@ -16,7 +16,7 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='pesquisa_aiia.webhook_secret',
         help="Um segredo opcional para validar a origem do webhook."
     )
-    aiia_default_whatsapp_msg = fields.Text(
+    aiia_default_whatsapp_msg = fields.Char(
         string='Mensagem Padrão WhatsApp',
         config_parameter='pesquisa_aiia.default_whatsapp_msg',
         default="Olá [Nome da Empresa], vimos sua atividade e gostaríamos de conversar." # Exemplo
@@ -26,7 +26,7 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='pesquisa_aiia.default_email_subject',
         default="Contato referente à sua empresa" # Exemplo
     )
-    aiia_default_email_body = fields.Text(
+    aiia_default_email_body = fields.Char(
         string='Corpo Padrão E-mail',
         config_parameter='pesquisa_aiia.default_email_body',
         default="""\

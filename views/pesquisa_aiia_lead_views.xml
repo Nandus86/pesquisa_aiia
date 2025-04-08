@@ -118,8 +118,6 @@
     <menuitem
         id="menu_pesquisa_aiia_root"
         name="Pesquisa AIIA"
-        <!-- web_icon: Precisa criar um ícone em static/description/icon.png -->
-        web_icon="pesquisa_aiia,static/description/icon.png"
         sequence="10"/>
 
     <menuitem
