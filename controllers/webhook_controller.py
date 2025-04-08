@@ -13,7 +13,14 @@ class PesquisaAiiaWebhook(http.Controller):
         """
         Recebe os dados do N8N via JSON POST.
         """
-        webhook_data = request.jsonrequest
+        # CORREÇÃO AQUI: Usar request.httprequest.get_json_data()
+        try:
+            webhook_data = request.httprequest.get_json_data()
+        except Exception as e:
+             # Se o corpo não for JSON válido, get_json_data() pode dar erro
+             _logger.error("Webhook Pesquisa AIIA: Erro ao decodificar JSON - %s", str(e))
+             return {'status': 'error', 'message': 'Corpo da requisição não é JSON válido'}
+
         _logger.info("Webhook Pesquisa AIIA Recebido: %s", json.dumps(webhook_data))
 
         # --- Validação de Segurança (Opcional, mas recomendado) ---
@@ -22,37 +29,34 @@ class PesquisaAiiaWebhook(http.Controller):
         # received_secret = request.httprequest.headers.get('X-N8N-Signature')
         # if secret and received_secret != secret:
         #     _logger.warning("Webhook Pesquisa AIIA: Segredo inválido recebido.")
-        #     return Response("Unauthorized", status=401)
+        #     return Response("Unauthorized", status=401) # Retorna erro HTTP correto
 
         # --- Validação dos Dados ---
         required_fields = ['nome_empresa', 'contato_telefonico', 'email', 'endereco', 'resumo_atividade']
-        if not webhook_data or not all(field in webhook_data for field in required_fields):
+        # Verifica se webhook_data é um dicionário e contém as chaves
+        if not isinstance(webhook_data, dict) or not all(field in webhook_data for field in required_fields):
             _logger.error("Webhook Pesquisa AIIA: Dados incompletos recebidos - %s", webhook_data)
-            # Retornar um erro JSON para o N8N poder tratar
-            return {'status': 'error', 'message': 'Dados incompletos'}
+            return {'status': 'error', 'message': 'Dados incompletos ou formato inválido'}
 
         # --- Criação do Lead ---
         try:
             # Usar sudo() porque o usuário 'public' não tem permissão de escrita
-            # Considerar criar um usuário API específico para mais segurança
             lead_vals = {
                 'name': webhook_data.get('nome_empresa'),
                 'phone': webhook_data.get('contato_telefonico'),
                 'email': webhook_data.get('email'),
                 'address': webhook_data.get('endereco'),
                 'activity_summary': webhook_data.get('resumo_atividade'),
-                # 'message_text' e 'use_default_message' ficam com os defaults do modelo
             }
             new_lead = request.env['pesquisa_aiia.lead'].sudo().create(lead_vals)
             _logger.info("Webhook Pesquisa AIIA: Lead criado com ID: %s", new_lead.id)
 
-            # Retornar sucesso para o N8N
             return {'status': 'success', 'lead_id': new_lead.id}
 
         except Exception as e:
             _logger.exception("Webhook Pesquisa AIIA: Erro ao criar lead - %s", str(e))
-            # Retornar erro genérico
-            # O N8N pode precisar de um status HTTP 500 também
-            request.env.cr.rollback() # Desfaz a transação em caso de erro
-            # Considerar retornar Response("Internal Server Error", status=500)
+            request.env.cr.rollback()
+            # Considerar retornar status HTTP 500 também
+            # return Response(json.dumps({'status': 'error', 'message': f'Erro interno do servidor: {str(e)}'}),
+            #                 content_type='application/json', status=500)
             return {'status': 'error', 'message': f'Erro interno do servidor: {str(e)}'}
