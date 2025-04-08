@@ -6,16 +6,24 @@
         <field name="priority" eval="90"/>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[hasclass('settings')]" position="inside">
-                <div class="app_settings_block" data-string="Pesquisa AIIA" string="Pesquisa AIIA" data-key="pesquisa_aiia">
+            <!--
+            Abordagem Robusta: Insere o bloco dentro do elemento raiz <form>.
+            Isso é menos propenso a quebrar entre versões do Odoo do que
+            depender de classes CSS específicas como 'settings' ou 'o_setting_container'.
+            -->
+            <xpath expr="/form" position="inside">
+                 <div class="app_settings_block" data-string="Pesquisa AIIA" string="Pesquisa AIIA" data-key="pesquisa_aiia">
                     <h2>Configurações do Webhook e Mensagens</h2>
                     <div class="row mt16 o_settings_container" id="pesquisa_aiia_settings">
+
+                        <!-- Bloco de Configuração do Webhook -->
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane">
-                                <field name="aiia_webhook_url"/>
+                                <!-- Ícone ou Checkbox (Opcional) -->
                             </div>
                             <div class="o_setting_right_pane">
-                                <label for="aiia_webhook_url"/>
+                                <label for="aiia_webhook_url" string="URL Webhook N8N (Leitura)"/>
+                                <field name="aiia_webhook_url" readonly="1"/> <!-- É readonly no Python, melhor marcar aqui também -->
                                 <div class="text-muted">
                                     Use esta URL no seu fluxo N8N para enviar dados via POST JSON.
                                 </div>
@@ -26,9 +34,11 @@
                                 </div>
                             </div>
                         </div>
+
+                         <!-- Bloco de Configuração da Mensagem WhatsApp -->
                          <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane">
-                                <!-- Pode adicionar um ícone ou checkbox aqui se necessário -->
+                                <!-- Ícone ou Checkbox (Opcional) -->
                             </div>
                             <div class="o_setting_right_pane">
                                 <label for="aiia_default_whatsapp_msg"/>
@@ -38,7 +48,12 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Bloco de Configuração do E-mail -->
                         <div class="col-12 col-lg-6 o_setting_box">
+                             <div class="o_setting_left_pane">
+                                <!-- Ícone ou Checkbox (Opcional) -->
+                             </div>
                              <div class="o_setting_right_pane">
                                 <label for="aiia_default_email_subject"/>
                                 <field name="aiia_default_email_subject" placeholder="Ex: Contato sobre sua empresa"/>
@@ -52,27 +67,32 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+
+                    </div> <!-- Fim de div class="row mt16 o_settings_container" -->
+                </div> <!-- Fim de div class="app_settings_block" -->
             </xpath>
         </field>
     </record>
 
+    <!-- Action Window para abrir as Configurações -->
      <record id="action_pesquisa_aiia_config_settings" model="ir.actions.act_window">
         <field name="name">Configurações Pesquisa AIIA</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
         <field name="target">inline</field>
+        <!-- O contexto 'module' garante que apenas as configurações deste app sejam salvas -->
         <field name="context">{'module' : 'pesquisa_aiia', 'bin_size': False}</field>
     </record>
 
+    <!-- Menu Item para acessar as Configurações -->
+    <!-- Certifique-se de que 'menu_pesquisa_aiia_root' está definido em outro arquivo XML (como pesquisa_aiia_lead_views.xml) -->
     <menuitem
         id="menu_pesquisa_aiia_config"
         name="Configurações"
-        parent="menu_pesquisa_aiia_root"
+        parent="pesquisa_aiia.menu_pesquisa_aiia_root"
         sequence="99"
         action="action_pesquisa_aiia_config_settings"
-        groups="base.group_system"/> <!-- Apenas administradores -->
+        groups="base.group_system"/> <!-- Apenas administradores podem configurar -->
 
 </odoo>
