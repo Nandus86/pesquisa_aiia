@@ -6,21 +6,26 @@
         <field name="name">pesquisa.aiia.lead.tree</field>
         <field name="model">pesquisa_aiia.lead</field>
         <field name="arch" type="xml">
-            <tree string="Leads Pesquisa AIIA" decoration-muted="contact_created==True"> <!-- Leads cinzas se contato criado -->
+            <tree string="Leads Pesquisa AIIA" decoration-muted="contact_created==True">
                 <field name="name" string="Empresa"/>
                 <field name="phone" widget="phone"/>
                 <field name="email" widget="email"/>
-                <field name="address" optional="hide"/> <!-- Oculto por padrão -->
-                <field name="activity_summary" optional="hide"/> <!-- Oculto por padrão -->
+                <field name="address" optional="hide"/>
+                <field name="activity_summary" optional="hide"/>
                 <field name="use_default_message"/>
                 <field name="message_text" string="Mensagem Customizada"/>
                 <field name="contact_created" string="Contato Criado?"/>
                  <!-- Botões de Ação -->
                 <button name="action_send_whatsapp" type="object" string="WhatsApp" icon="fa-whatsapp" help="Enviar mensagem via WhatsApp"/>
                 <button name="action_send_email" type="object" string="E-mail" icon="fa-envelope-o" help="Enviar E-mail"/>
-                <button name="action_create_contact" type="object" string="Criar Contato" icon="fa-user-plus" help="Criar Contato no Odoo" attrs="{'invisible': [('contact_created', '=', True)]}"/>
-                <!-- O botão de excluir padrão do Odoo funciona, mas se quiser um botão explícito: -->
-                <!-- <button name="action_delete_lead" type="object" string="Excluir" icon="fa-trash-o" help="Excluir este Lead" confirm="Tem certeza que deseja excluir este lead?"/> -->
+                <!-- Substituído attrs por column_invisible para Odoo 17 -->
+                <button name="action_create_contact"
+                        type="object"
+                        string="Criar Contato"
+                        icon="fa-user-plus"
+                        help="Criar Contato no Odoo"
+                        column_invisible="[('contact_created', '=', True)]"/>
+                <!-- O botão de excluir padrão funciona -->
             </tree>
         </field>
     </record>
@@ -39,7 +44,12 @@
                          <button name="action_send_email" type="object" class="oe_stat_button" icon="fa-envelope-o">
                             E-mail
                         </button>
-                         <button name="action_create_contact" type="object" class="oe_stat_button" icon="fa-user-plus" attrs="{'invisible': [('contact_created', '=', True)]}">
+                         <!-- Substituído attrs por invisible para Odoo 17 (em form view) -->
+                         <button name="action_create_contact"
+                                 type="object"
+                                 class="oe_stat_button"
+                                 icon="fa-user-plus"
+                                 invisible="[('contact_created', '=', True)]">
                             Criar Contato
                         </button>
                     </div>
@@ -61,7 +71,10 @@
                              </group>
                             <group string="Mensagem a ser Enviada">
                                 <field name="use_default_message"/>
-                                <field name="message_text" placeholder="Digite aqui a mensagem customizada a ser enviada..." attrs="{'invisible': [('use_default_message', '=', True)]}"/>
+                                <!-- Substituído attrs por invisible para Odoo 17 (em form view) -->
+                                <field name="message_text"
+                                       placeholder="Digite aqui a mensagem customizada a ser enviada..."
+                                       invisible="[('use_default_message', '=', True)]"/>
                             </group>
                          </page>
                     </notebook>
@@ -70,7 +83,7 @@
         </field>
     </record>
 
-    <!-- Search View (Opcional, mas recomendado) -->
+    <!-- Search View -->
     <record id="view_pesquisa_aiia_lead_search" model="ir.ui.view">
         <field name="name">pesquisa.aiia.lead.search</field>
         <field name="model">pesquisa_aiia.lead</field>
@@ -87,7 +100,6 @@
             </search>
         </field>
     </record>
-
 
     <!-- Action Window -->
     <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
@@ -106,7 +118,8 @@
     <menuitem
         id="menu_pesquisa_aiia_root"
         name="Pesquisa AIIA"
-        web_icon="pesquisa_aiia,static/description/icon.png" <!-- Precisa criar um ícone -->
+        <!-- web_icon: Precisa criar um ícone em static/description/icon.png -->
+        web_icon="pesquisa_aiia,static/description/icon.png"
         sequence="10"/>
 
     <menuitem
