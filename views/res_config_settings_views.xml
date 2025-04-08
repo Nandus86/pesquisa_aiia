@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_pesquisa_aiia" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.pesquisa.aiia</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Pesquisa AIIA" string="Pesquisa AIIA" data-key="pesquisa_aiia">
+                    <h2>Configurações do Webhook e Mensagens</h2>
+                    <div class="row mt16 o_settings_container" id="pesquisa_aiia_settings">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="aiia_webhook_url"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="aiia_webhook_url"/>
+                                <div class="text-muted">
+                                    Use esta URL no seu fluxo N8N para enviar dados via POST JSON.
+                                </div>
+                                <label for="aiia_webhook_secret" class="mt-2"/>
+                                <field name="aiia_webhook_secret" placeholder="Opcional: defina um segredo aqui e no N8N"/>
+                                <div class="text-muted">
+                                     Adicione segurança extra validando um segredo.
+                                </div>
+                            </div>
+                        </div>
+                         <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <!-- Pode adicionar um ícone ou checkbox aqui se necessário -->
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="aiia_default_whatsapp_msg"/>
+                                <field name="aiia_default_whatsapp_msg" widget="text" class="oe_inline" placeholder="Ex: Olá [Nome da Empresa]..."/>
+                                <div class="text-muted">
+                                    Mensagem padrão para envio via WhatsApp (se a opção estiver marcada no lead).
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                             <div class="o_setting_right_pane">
+                                <label for="aiia_default_email_subject"/>
+                                <field name="aiia_default_email_subject" placeholder="Ex: Contato sobre sua empresa"/>
+                                 <div class="text-muted">
+                                    Assunto padrão para envio de e-mail.
+                                </div>
+                                <label for="aiia_default_email_body" class="mt-2"/>
+                                <field name="aiia_default_email_body" widget="text" placeholder="Ex: Prezados da [Nome da Empresa]..."/>
+                                <div class="text-muted">
+                                    Corpo padrão para envio de e-mail (se a opção estiver marcada no lead).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+     <record id="action_pesquisa_aiia_config_settings" model="ir.actions.act_window">
+        <field name="name">Configurações Pesquisa AIIA</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'pesquisa_aiia', 'bin_size': False}</field>
+    </record>
+
+    <menuitem
+        id="menu_pesquisa_aiia_config"
+        name="Configurações"
+        parent="menu_pesquisa_aiia_root"
+        sequence="99"
+        action="action_pesquisa_aiia_config_settings"
+        groups="base.group_system"/> <!-- Apenas administradores -->
+
+</odoo>

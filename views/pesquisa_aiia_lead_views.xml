@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree/List View -->
+    <record id="view_pesquisa_aiia_lead_tree" model="ir.ui.view">
+        <field name="name">pesquisa.aiia.lead.tree</field>
+        <field name="model">pesquisa_aiia.lead</field>
+        <field name="arch" type="xml">
+            <tree string="Leads Pesquisa AIIA" decoration-muted="contact_created==True"> <!-- Leads cinzas se contato criado -->
+                <field name="name" string="Empresa"/>
+                <field name="phone" widget="phone"/>
+                <field name="email" widget="email"/>
+                <field name="address" optional="hide"/> <!-- Oculto por padrão -->
+                <field name="activity_summary" optional="hide"/> <!-- Oculto por padrão -->
+                <field name="use_default_message"/>
+                <field name="message_text" string="Mensagem Customizada"/>
+                <field name="contact_created" string="Contato Criado?"/>
+                 <!-- Botões de Ação -->
+                <button name="action_send_whatsapp" type="object" string="WhatsApp" icon="fa-whatsapp" help="Enviar mensagem via WhatsApp"/>
+                <button name="action_send_email" type="object" string="E-mail" icon="fa-envelope-o" help="Enviar E-mail"/>
+                <button name="action_create_contact" type="object" string="Criar Contato" icon="fa-user-plus" help="Criar Contato no Odoo" attrs="{'invisible': [('contact_created', '=', True)]}"/>
+                <!-- O botão de excluir padrão do Odoo funciona, mas se quiser um botão explícito: -->
+                <!-- <button name="action_delete_lead" type="object" string="Excluir" icon="fa-trash-o" help="Excluir este Lead" confirm="Tem certeza que deseja excluir este lead?"/> -->
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_pesquisa_aiia_lead_form" model="ir.ui.view">
+        <field name="name">pesquisa.aiia.lead.form</field>
+        <field name="model">pesquisa_aiia.lead</field>
+        <field name="arch" type="xml">
+            <form string="Lead Pesquisa AIIA">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                         <button name="action_send_whatsapp" type="object" class="oe_stat_button" icon="fa-whatsapp">
+                            WhatsApp
+                        </button>
+                         <button name="action_send_email" type="object" class="oe_stat_button" icon="fa-envelope-o">
+                            E-mail
+                        </button>
+                         <button name="action_create_contact" type="object" class="oe_stat_button" icon="fa-user-plus" attrs="{'invisible': [('contact_created', '=', True)]}">
+                            Criar Contato
+                        </button>
+                    </div>
+                    <group name="group_top">
+                        <group name="group_left">
+                            <field name="name"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="email" widget="email"/>
+                        </group>
+                        <group name="group_right">
+                            <field name="address"/>
+                             <field name="contact_created"/>
+                        </group>
+                    </group>
+                    <notebook>
+                         <page string="Detalhes e Mensagem">
+                             <group>
+                                <field name="activity_summary" nolabel="1" placeholder="Resumo da Atividade..."/>
+                             </group>
+                            <group string="Mensagem a ser Enviada">
+                                <field name="use_default_message"/>
+                                <field name="message_text" placeholder="Digite aqui a mensagem customizada a ser enviada..." attrs="{'invisible': [('use_default_message', '=', True)]}"/>
+                            </group>
+                         </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View (Opcional, mas recomendado) -->
+    <record id="view_pesquisa_aiia_lead_search" model="ir.ui.view">
+        <field name="name">pesquisa.aiia.lead.search</field>
+        <field name="model">pesquisa_aiia.lead</field>
+        <field name="arch" type="xml">
+            <search string="Pesquisar Leads AIIA">
+                <field name="name" string="Empresa"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <filter string="Contato Não Criado" name="filter_not_created" domain="[('contact_created', '=', False)]"/>
+                <filter string="Contato Criado" name="filter_created" domain="[('contact_created', '=', True)]"/>
+                <group expand="0" string="Agrupar por...">
+                    <filter string="Contato Criado" name="groupby_contact_created" domain="[]" context="{'group_by':'contact_created'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+
+    <!-- Action Window -->
+    <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
+        <field name="name">Leads Pesquisa AIIA</field>
+        <field name="res_model">pesquisa_aiia.lead</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nenhum lead recebido ainda. Configure o webhook no N8N!
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem
+        id="menu_pesquisa_aiia_root"
+        name="Pesquisa AIIA"
+        web_icon="pesquisa_aiia,static/description/icon.png" <!-- Precisa criar um ícone -->
+        sequence="10"/>
+
+    <menuitem
+        id="menu_pesquisa_aiia_leads"
+        name="Leads Recebidos"
+        parent="menu_pesquisa_aiia_root"
+        action="action_pesquisa_aiia_leads"
+        sequence="10"/>
+
+</odoo>
