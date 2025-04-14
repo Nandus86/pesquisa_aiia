@@ -110,6 +110,7 @@
         <field name="res_model">pesquisa_aiia.lead</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>
+        <field name="context">{'create_action': 'pesquisa_aiia.action_pesquisa_aiia_search_wizard'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Nenhum lead recebido ainda. Configure o webhook no N8N!
