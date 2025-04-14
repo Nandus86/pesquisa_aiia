@@ -31,8 +31,8 @@
         <field name="arch" type="xml">
             <form string="Detalhes da Pesquisa AIIA">
                  <header>
-                      <!-- Botão mantido no header do formulário -->
-                      <button name="action_search_next_page" type="object" string="Pesquisar Próxima Página" class="btn-primary"
+                      <!-- *** CORREÇÃO AQUI: Chama a Ação do Servidor *** -->
+                      <button name="%(pesquisa_aiia.action_server_search_next_page)d" type="action" string="Pesquisar Próxima Página" class="btn-primary"
                               invisible="[('next_page_token', '=', False)]"/>
                       <field name="status" widget="statusbar" statusbar_visible="new,processing,pending_next,completed,error"/>
                  </header>
