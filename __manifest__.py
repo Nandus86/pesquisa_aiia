@@ -19,7 +19,8 @@
     'data': [
         'security/ir.model.access.csv',
         'views/pesquisa_aiia_lead_views.xml',
-        'views/res_config_settings_views.xml'
+        'views/res_config_settings_views.xml',
+        'views/pesquisa_aiia_scrape_wizard_views.xml'
     ],
     'installable': True,
     'application': True, 

@@ -38,6 +38,11 @@ Atenciosamente,
 Sua Equipe
 """ # Exemplo
     )
+    aiia_n8n_scrape_trigger_url = fields.Char(
+        string='URL Webhook N8N (Iniciar Scraping)',
+        config_parameter='pesquisa_aiia.n8n_scrape_trigger_url',
+        help="URL do webhook no N8N que recebe a solicitação de pesquisa do Odoo."
+    )
 
     @api.model
     def get_values(self):
