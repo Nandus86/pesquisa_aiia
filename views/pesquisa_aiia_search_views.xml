@@ -15,9 +15,11 @@
                 <field name="next_page_token" optional="hide"/>
                  <!-- Botão para ver resultados diretamente da lista -->
                  <button name="action_view_results" type="object" string="Ver Leads" icon="fa-list"/>
-                 <!-- *** CORREÇÃO ODOO 17: Usa column_invisible *** -->
+                 <!-- *** BOTÃO REMOVIDO DA TREE VIEW *** -->
+                 <!--
                  <button name="action_search_next_page" type="object" string="Próxima Página" icon="fa-arrow-right"
                          column_invisible="[('next_page_token', '=', False)]"/>
+                 -->
             </tree>
         </field>
     </record>
@@ -29,7 +31,7 @@
         <field name="arch" type="xml">
             <form string="Detalhes da Pesquisa AIIA">
                  <header>
-                      <!-- *** CORREÇÃO ODOO 17: Usa invisible *** -->
+                      <!-- Botão mantido no header do formulário -->
                       <button name="action_search_next_page" type="object" string="Pesquisar Próxima Página" class="btn-primary"
                               invisible="[('next_page_token', '=', False)]"/>
                       <field name="status" widget="statusbar" statusbar_visible="new,processing,pending_next,completed,error"/>
@@ -48,20 +50,17 @@
                           </group>
                           <group>
                                <field name="next_page_token" readonly="1"/>
-                               <!-- *** CORREÇÃO ODOO 17: Usa invisible *** -->
                                <field name="error_message" readonly="1" invisible="[('status', '!=', 'error')]"/>
                           </group>
                      </group>
                      <notebook>
                           <page string="Leads Encontrados">
-                               <!-- Mostra a lista de leads diretamente no formulário -->
                                <field name="lead_ids" readonly="1">
                                     <tree>
                                          <field name="name"/>
                                          <field name="phone"/>
                                          <field name="email"/>
                                          <field name="create_date" optional="hide"/>
-                                         <!-- Se precisar dos botões de ação dos leads aqui, copie-os da view_pesquisa_aiia_lead_tree -->
                                     </tree>
                                </field>
                           </page>
@@ -71,14 +70,11 @@
         </field>
     </record>
 
-    <!-- Ação de Janela Principal para Pesquisas -->
+    <!-- Ação de Janela Principal MODIFICADA para Client Action -->
     <record id="action_pesquisa_aiia_search_main" model="ir.actions.client">
-        <field name="name">Pesquisa AIIA</field> <!-- Nome ajustado -->
-        <!-- Tag que corresponde ao registro no JS -->
+        <field name="name">Pesquisa AIIA</field>
         <field name="tag">pesquisa_aiia.action_client_search</field>
-        <!-- Contexto inicial se necessário -->
-        <!-- <field name="context">{}</field> -->
-        <field name="target">current</field> <!-- Abre na área principal -->
+        <field name="target">current</field>
     </record>
 
      <!-- Menu Item Principal (Raiz do App) -->
@@ -89,9 +85,6 @@
         web_icon="pesquisa_aiia,static/description/icon.png"
         sequence="10"/>
 
-     <!-- Removemos o submenu de histórico, pois a ação principal já abre a tela -->
-     <!-- <menuitem id="menu_pesquisa_aiia_search_history" ... /> -->
-
      <!-- Mantém o submenu para ver TODOS os leads, sem filtro -->
      <menuitem
         id="menu_pesquisa_aiia_leads_all"
@@ -99,5 +92,8 @@
         parent="menu_pesquisa_aiia_root"
         action="pesquisa_aiia.action_pesquisa_aiia_leads"
         sequence="20"/>
+
+    <!-- As views e actions para o botão criar foram removidas/ajustadas -->
+    <!-- A ação Client Action é agora a principal -->
 
 </odoo>
