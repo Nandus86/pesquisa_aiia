@@ -7,13 +7,13 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-class PesquisaAiiaScrapeWizard(models.TransientModel):
-    _name = 'pesquisa_aiia.scrape.wizard'
+class PesquisaAiiaSearchWizard(models.TransientModel):
+    _name = 'pesquisa_aiia.search.wizard'
     _description = 'Wizard para Iniciar Pesquisa AIIA'
 
     search_query = fields.Text(string='Termo de Pesquisa', required=True, help="Digite o que você deseja pesquisar (ex: 'Salões de beleza em Curitiba', 'Restaurantes veganos SP')")
 
-    def action_trigger_scrape(self):
+    def action_trigger_search(self):
         self.ensure_one()
         if not self.search_query:
             raise ValidationError(_("Por favor, insira um termo de pesquisa."))
@@ -27,7 +27,7 @@ class PesquisaAiiaScrapeWizard(models.TransientModel):
 
         # Obter a URL do webhook de trigger da configuração
         config_params = self.env['ir.config_parameter'].sudo()
-        n8n_trigger_url = config_params.get_param('pesquisa_aiia.n8n_scrape_trigger_url')
+        n8n_trigger_url = config_params.get_param('pesquisa_aiia.n8n_search_trigger_url')
 
         if not n8n_trigger_url:
             raise UserError(_("A 'URL Webhook N8N (Iniciar Scraping)' não está configurada. Vá em Configurações -> Pesquisa AIIA para defini-la."))
