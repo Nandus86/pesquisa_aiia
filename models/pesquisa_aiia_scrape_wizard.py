@@ -44,6 +44,11 @@ class PesquisaAiiaScrapeWizard(models.TransientModel):
 
             _logger.info(f"Solicitação de scraping enviada com sucesso para N8N. Resposta N8N (status {response.status_code}): {response.text[:200]}") # Loga início da resposta
 
+            self.env.user.notify_success(
+                message=_("Sua pesquisa por '%s' foi enviada para processamento. Os resultados aparecerão em breve.", self.search_query)
+            )
+            return {'type': 'ir.actions.act_window_close'}
+
             # Mostrar notificação de sucesso para o usuário
             notification = {
                 'type': 'ir.actions.client',

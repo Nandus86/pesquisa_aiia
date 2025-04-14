@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Ação do Servidor que abre o Wizard -->
+        <record id="action_server_open_scrape_wizard" model="ir.actions.server">
+            <field name="name">Iniciar Nova Pesquisa AIIA</field>
+            <!-- Associado ao modelo onde o botão "Ação" aparecerá -->
+            <field name="model_id" ref="model_pesquisa_aiia_lead"/>
+            <!-- Vincula a ação ao modelo, fazendo aparecer no menu "Ação" -->
+            <field name="binding_model_id" ref="model_pesquisa_aiia_lead"/>
+            <!-- Especifica em quais tipos de view o botão "Ação" deve mostrar esta opção -->
+            <field name="binding_view_types">list,form</field>
+            <!-- Define que a ação executa código Python -->
+            <field name="state">code</field>
+            <!-- O código Python simplesmente retorna a ação de janela que abre o wizard -->
+            <field name="code">
+            </field>
+        </record>
+
+    </data>
+</odoo>

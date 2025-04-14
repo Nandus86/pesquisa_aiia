@@ -8,7 +8,7 @@
         armazená-las como leads e fornecer ações rápidas (WhatsApp, Email, etc.).
     """,
     'category': 'Sales/CRM',
-    'author': 'Fernando Dias - v2.0.3',
+    'author': 'Fernando Dias - v2.0.4',
     'website': '',
     'license': 'LGPL-3', 
     'depends': [
@@ -19,6 +19,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/pesquisa_aiia_scrape_wizard_views.xml',
+        'views/pesquisa_aiia_server_actions.xml',
         'views/pesquisa_aiia_lead_views.xml',
         'views/res_config_settings_views.xml'
     ],
