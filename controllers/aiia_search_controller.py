@@ -4,6 +4,7 @@ import logging
 from odoo import http
 from odoo.http import request, Response
 import werkzeug
+from odoo.exceptions import UserError, ValidationError # Importar ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -82,3 +83,40 @@ class AiiaSearchUpdate(http.Controller):
             request.env.cr.rollback()
             return Response(json.dumps({'status': 'error', 'message': f'Erro interno ao atualizar pesquisa: {str(e)}'}),
                             content_type='application/json', status=500)
+        
+    @http.route('/pesquisa_aiia/rpc/start_search', type='json', auth='user')
+    def rpc_start_new_search(self, query):
+        """Endpoint RPC para iniciar uma nova pesquisa."""
+        try:
+            # Chama o método de classe no modelo
+            search_id = request.env['pesquisa_aiia.search'].start_new_search(query)
+            return {'status': 'success', 'search_id': search_id}
+        except (UserError, ValidationError) as e:
+            # Retorna erros de validação/usuário como erros tratados
+            _logger.warning(f"Erro ao iniciar pesquisa via RPC: {e}")
+            # Odoo transforma UserError/ValidationError em erro RPC automaticamente
+            raise e
+        except Exception as e:
+            # Captura erros inesperados
+            _logger.exception(f"Erro inesperado em RPC start_search: {e}")
+            # Retorna erro genérico (Odoo pode já fazer isso, mas para garantir)
+            raise werkzeug.exceptions.InternalServerError(f"Erro interno: {str(e)}")
+
+    @http.route('/pesquisa_aiia/rpc/search_next_page', type='json', auth='user')
+    def rpc_search_next_page(self, search_id):
+        """Endpoint RPC para solicitar a próxima página."""
+        if not search_id:
+            raise ValidationError("ID da Pesquisa não fornecido.")
+        try:
+            search_record = request.env['pesquisa_aiia.search'].browse(int(search_id))
+            if not search_record.exists():
+                 raise UserError(f"Pesquisa com ID {search_id} não encontrada.")
+            # Chama o método de instância no registro correto
+            search_record.search_next_page()
+            return {'status': 'success', 'message': 'Solicitação da próxima página enviada.'}
+        except (UserError, ValidationError) as e:
+            _logger.warning(f"Erro ao solicitar próxima página via RPC (Search ID: {search_id}): {e}")
+            raise e
+        except Exception as e:
+            _logger.exception(f"Erro inesperado em RPC search_next_page (Search ID: {search_id}): {e}")
+            raise werkzeug.exceptions.InternalServerError(f"Erro interno: {str(e)}")

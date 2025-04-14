@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="pesquisa_aiia.PesquisaAiiaSearchComponent" owl="1">
+        <div class="o_pesquisa_aiia_container d-flex flex-column vh-100 p-3 bg-light">
+
+            <!-- Área de Pesquisa Superior -->
+            <div class="o_pesquisa_aiia_search_bar border-bottom pb-3 mb-3">
+                <h4>Nova Pesquisa</h4>
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Digite o termo (ex: Restaurantes em Londrina)"
+                           t-model="state.searchQueryInput"
+                           t-on-keydown="handleInputKeydown"
+                           t-ref="searchInput"/>
+                    <button class="btn btn-primary" t-on-click="startNewSearch" t-att-disabled="state.isSearching ? 'disabled' : null">
+                        <i t-if="!state.isSearching" class="fa fa-search me-1"/>
+                         <i t-if="state.isSearching" class="fa fa-spinner fa-spin me-1"/>
+                        Pesquisar
+                    </button>
+                </div>
+                <div t-if="state.lastError" class="alert alert-danger mt-2 p-1" role="alert">
+                    <small><t t-esc="state.lastError"/></small>
+                </div>
+            </div>
+
+            <!-- Área Principal (Histórico e Resultados) -->
+            <div class="o_pesquisa_aiia_main_area d-flex flex-grow-1 overflow-hidden">
+
+                <!-- Sidebar de Histórico (Opcional, pode ser simplificada) -->
+                <div class="o_pesquisa_aiia_history_sidebar border-end pe-3 me-3" style="flex: 0 0 250px; overflow-y: auto;">
+                     <h5>Histórico</h5>
+                     <div class="list-group list-group-flush">
+                          <t t-if="state.searchHistory.length === 0">
+                               <span class="list-group-item text-muted">Nenhuma pesquisa anterior.</span>
+                          </t>
+                          <button t-foreach="state.searchHistory" t-as="search" t-key="search.id"
+                                  type="button"
+                                  class="list-group-item list-group-item-action p-2 text-truncate"
+                                  t-att-class="{ 'active': state.activeSearchId === search.id }"
+                                  t-on-click="() => this.selectSearch(search.id)"
+                                  t-att-title="search.search_query">
+                               <small class="d-block text-muted"><t t-esc="formatDate(search.create_date)"/></small>
+                               <t t-esc="search.name"/>
+                               <span t-if="search.status === 'error'" class="badge bg-danger ms-1">Erro</span>
+                                <span t-if="search.status === 'processing'" class="badge bg-info ms-1">Processando</span>
+                          </button>
+                     </div>
+                </div>
+
+                <!-- Área de Resultados -->
+                <div class="o_pesquisa_aiia_results_area d-flex flex-column flex-grow-1 overflow-hidden">
+                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                         <h5 class="m-0">
+                              <t t-if="activeSearch">Resultados para: <span class="fw-normal"><t t-esc="activeSearch.name"/></span></t>
+                              <t t-else="">Selecione uma pesquisa ou inicie uma nova</t>
+                         </h5>
+                         <!-- Botão Próxima Página -->
+                         <button t-if="activeSearch && activeSearch.next_page_token"
+                                 class="btn btn-sm btn-secondary"
+                                 t-on-click="fetchNextPage"
+                                 t-att-disabled="state.isSearching ? 'disabled' : null">
+                             <i t-if="!state.isSearching" class="fa fa-arrow-right me-1"/>
+                             <i t-if="state.isSearching" class="fa fa-spinner fa-spin me-1"/>
+                             Próxima Página
+                         </button>
+                          <span t-if="activeSearch && !activeSearch.next_page_token && activeSearch.status === 'completed'" class="badge bg-success">Pesquisa Concluída</span>
+                           <span t-if="activeSearch && activeSearch.status === 'error'" class="badge bg-danger">Erro na Pesquisa</span>
+                    </div>
+
+                    <div class="o_pesquisa_aiia_results_list flex-grow-1 overflow-auto pe-2">
+                         <t t-if="state.isLoadingResults">
+                              <div class="text-center p-5"><i class="fa fa-spinner fa-spin fa-2x text-muted"/> Carregando...</div>
+                         </t>
+                         <t t-elif="!activeSearch">
+                             <div class="text-center text-muted p-5">Nenhuma pesquisa selecionada.</div>
+                         </t>
+                         <t t-elif="state.searchResults.length === 0 && !state.isLoadingResults">
+                              <div class="text-center text-muted p-5">Nenhum lead encontrado para esta pesquisa ainda.</div>
+                         </t>
+                         <t t-else="">
+                             <!-- Lista Simples de Leads -->
+                             <table class="table table-sm table-hover">
+                                 <thead>
+                                     <tr><th>Empresa</th><th>Telefone</th><th>Email</th><th>Ações</th></tr>
+                                 </thead>
+                                 <tbody>
+                                     <tr t-foreach="state.searchResults" t-as="lead" t-key="lead.id">
+                                         <td t-esc="lead.name"/>
+                                         <td><a t-if="lead.phone" t-attf-href="tel:{{lead.phone}}"><t t-esc="lead.phone"/></a></td>
+                                         <td><a t-if="lead.email" t-attf-href="mailto:{{lead.email}}"><t t-esc="lead.email"/></a></td>
+                                         <td>
+                                             <!-- Simplificado: Botão para abrir o lead no Odoo -->
+                                             <button class="btn btn-sm btn-outline-secondary p-1" title="Ver Detalhes do Lead" t-on-click="() => this.openLead(lead.id)">
+                                                 <i class="fa fa-eye"/>
+                                             </button>
+                                             <!-- Poderia adicionar botões de ação rápida aqui via RPC se necessário -->
+                                         </td>
+                                     </tr>
+                                 </tbody>
+                             </table>
+                         </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>
