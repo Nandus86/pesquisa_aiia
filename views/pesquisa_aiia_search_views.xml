@@ -85,7 +85,6 @@
      <menuitem
         id="menu_pesquisa_aiia_root"
         name="Pesquisa AIIA"
-        # Ação agora é a client action
         action="action_pesquisa_aiia_search_main"
         web_icon="pesquisa_aiia,static/description/icon.png"
         sequence="10"/>
