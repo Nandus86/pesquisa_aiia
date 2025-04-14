@@ -15,11 +15,9 @@
                 <field name="next_page_token" optional="hide"/>
                  <!-- Botão para ver resultados diretamente da lista -->
                  <button name="action_view_results" type="object" string="Ver Leads" icon="fa-list"/>
-                 <!-- Botão para próxima página diretamente da lista -->
+                 <!-- *** CORREÇÃO ODOO 17: Usa column_invisible *** -->
                  <button name="action_search_next_page" type="object" string="Próxima Página" icon="fa-arrow-right"
-                         attrs="{'invisible': [('next_page_token', '=', False)]}"/>
-                         <!-- No Odoo 17, usar column_invisible -->
-                         <!-- column_invisible="[('next_page_token', '=', False)]" -->
+                         column_invisible="[('next_page_token', '=', False)]"/>
             </tree>
         </field>
     </record>
@@ -31,9 +29,9 @@
         <field name="arch" type="xml">
             <form string="Detalhes da Pesquisa AIIA">
                  <header>
+                      <!-- *** CORREÇÃO ODOO 17: Usa invisible *** -->
                       <button name="action_search_next_page" type="object" string="Pesquisar Próxima Página" class="btn-primary"
                               invisible="[('next_page_token', '=', False)]"/>
-                              <!-- Odoo 17: invisible="[('next_page_token', '=', False)]" -->
                       <field name="status" widget="statusbar" statusbar_visible="new,processing,pending_next,completed,error"/>
                  </header>
                 <sheet>
@@ -50,6 +48,7 @@
                           </group>
                           <group>
                                <field name="next_page_token" readonly="1"/>
+                               <!-- *** CORREÇÃO ODOO 17: Usa invisible *** -->
                                <field name="error_message" readonly="1" invisible="[('status', '!=', 'error')]"/>
                           </group>
                      </group>
@@ -62,7 +61,7 @@
                                          <field name="phone"/>
                                          <field name="email"/>
                                          <field name="create_date" optional="hide"/>
-                                         <!-- Adicionar botões de ação rápida aqui se desejado -->
+                                         <!-- Se precisar dos botões de ação dos leads aqui, copie-os da view_pesquisa_aiia_lead_tree -->
                                     </tree>
                                </field>
                           </page>
@@ -86,7 +85,8 @@
         </field>
     </record>
 
-     <!-- Menu Item Principal -->
+     <!-- Menu Item Principal (Raiz do App) -->
+     <!-- Garanta que o ícone existe ou remova/comente a linha web_icon -->
      <menuitem
         id="menu_pesquisa_aiia_root"
         name="Pesquisa AIIA"
@@ -101,7 +101,9 @@
         action="action_pesquisa_aiia_search_main"
         sequence="10"/>
 
-     <!-- Submenu para Leads (Mantém acesso a *todos* os leads) -->
+     <!-- Submenu para Leads (Mostra TODOS os leads, não filtrados por pesquisa) -->
+     <!-- Certifique-se que a action 'pesquisa_aiia.action_pesquisa_aiia_leads' está definida -->
+     <!-- em 'pesquisa_aiia_lead_views.xml' -->
      <menuitem
         id="menu_pesquisa_aiia_leads_all"
         name="Todos os Leads Recebidos"
@@ -109,7 +111,7 @@
         action="pesquisa_aiia.action_pesquisa_aiia_leads"
         sequence="20"/>
 
-      <!-- Adicionando o botão CRIAR na tree view de pesquisas para abrir o Wizard -->
+      <!-- Vincula as views Tree e Form à Ação de Janela Principal -->
       <record id="action_pesquisa_aiia_search_main_tree" model="ir.actions.act_window.view">
         <field name="sequence" eval="1"/>
         <field name="view_mode">tree</field>
@@ -122,7 +124,10 @@
         <field name="view_id" ref="view_pesquisa_aiia_search_form"/>
         <field name="act_window_id" ref="action_pesquisa_aiia_search_main"/>
       </record>
-      <!-- Ação do botão Criar para abrir o wizard -->
+
+      <!-- Ação para o botão "Criar" na lista de Pesquisas abrir o Wizard -->
+      <!-- Certifique-se que a action 'pesquisa_aiia.action_pesquisa_aiia_scrape_wizard' está definida -->
+      <!-- em 'pesquisa_aiia_scrape_wizard_views.xml' -->
        <record id="action_pesquisa_aiia_search_main_create" model="ir.actions.act_window">
             <field name="name">Iniciar Nova Pesquisa AIIA</field>
             <field name="res_model">pesquisa_aiia.search.wizard</field>
@@ -131,8 +136,7 @@
             <!-- Vincula esta ação ao botão "Criar" do modelo 'pesquisa_aiia.search' -->
             <field name="binding_model_id" ref="model_pesquisa_aiia_search"/>
             <field name="binding_type">action</field>
-            <field name="binding_view_types">list</field> <!-- Apenas na lista -->
+            <field name="binding_view_types">list</field> <!-- Aparece apenas na view de lista -->
         </record>
-
 
 </odoo>
