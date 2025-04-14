@@ -76,6 +76,7 @@
         <field name="name">Histórico de Pesquisas AIIA</field>
         <field name="res_model">pesquisa_aiia.search</field>
         <field name="view_mode">tree,form</field>
+        <field name="context">{'create_action': 'pesquisa_aiia.action_pesquisa_aiia_scrape_wizard'}</field>
         <field name="help" type="html">
           <p class="o_view_nocontent_smiling_face">
             Nenhuma pesquisa foi iniciada ainda.
@@ -125,18 +126,5 @@
         <field name="act_window_id" ref="action_pesquisa_aiia_search_main"/>
       </record>
 
-      <!-- Ação para o botão "Criar" na lista de Pesquisas abrir o Wizard -->
-      <!-- Certifique-se que a action 'pesquisa_aiia.action_pesquisa_aiia_scrape_wizard' está definida -->
-      <!-- em 'pesquisa_aiia_scrape_wizard_views.xml' -->
-       <record id="action_pesquisa_aiia_search_main_create" model="ir.actions.act_window">
-            <field name="name">Iniciar Nova Pesquisa AIIA</field>
-            <field name="res_model">pesquisa_aiia.search.wizard</field>
-            <field name="view_mode">form</field>
-            <field name="target">new</field>
-            <!-- Vincula esta ação ao botão "Criar" do modelo 'pesquisa_aiia.search' -->
-            <field name="binding_model_id" ref="model_pesquisa_aiia_search"/>
-            <field name="binding_type">action</field>
-            <field name="binding_view_types">list</field> <!-- Aparece apenas na view de lista -->
-        </record>
 
 </odoo>
