@@ -38,6 +38,26 @@
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
+                                <label for="aiia_odoo_update_webhook_url" string="URL Odoo (Update Pesquisa)"/>
+                                <div class="text-muted">
+                                    URL que o N8N chama para atualizar o status e token da próxima página.
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="aiia_odoo_update_webhook_url" readonly="1"/>
+                                </div>
+                                    <label for="aiia_odoo_update_secret" class="mt-2"/>
+                                <div class="text-muted">
+                                 Segredo opcional para validar updates vindos do N8N (envie no header 'X-N8N-Odoo-Update-Secret').
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="aiia_odoo_update_secret" placeholder="Defina um segredo seguro" password="True"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
                                 <label for="aiia_n8n_scrape_trigger_url"/>
                                 <div class="text-muted">
                                    URL no N8N para onde o Odoo enviará as solicitações de pesquisa.

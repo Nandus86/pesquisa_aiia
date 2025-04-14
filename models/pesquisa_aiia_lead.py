@@ -9,6 +9,7 @@ class PesquisaAiiaLead(models.Model):
     _description = 'Lead de Pesquisa AIIA'
     _order = 'create_date desc' # Ordena os mais recentes primeiro
 
+    search_id = fields.Many2one('pesquisa_aiia.search', string='Pesquisa Origem', ondelete='set null', index=True)
     name = fields.Char(string='Nome da Empresa', required=True)
     phone = fields.Char(string='Telefone')
     email = fields.Char(string='E-mail')

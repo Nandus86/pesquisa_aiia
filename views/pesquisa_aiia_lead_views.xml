@@ -7,6 +7,7 @@
         <field name="model">pesquisa_aiia.lead</field>
         <field name="arch" type="xml">
             <tree string="Leads Pesquisa AIIA" decoration-muted="contact_created==True">
+                <field name="search_id" optional="show" readonly="1"/>
                 <field name="name" string="Empresa"/>
                 <field name="phone" widget="phone"/>
                 <field name="email" widget="email"/>
@@ -56,6 +57,7 @@
                     <group name="group_top">
                         <group name="group_left">
                             <field name="name"/>
+                            <field name="search_id" readonly="1" options="{'no_open': True}"/>
                             <field name="phone" widget="phone"/>
                             <field name="email" widget="email"/>
                         </group>
@@ -92,6 +94,7 @@
                 <field name="name" string="Empresa"/>
                 <field name="email"/>
                 <field name="phone"/>
+                <field name="search_id" string="Pesquisa Origem" filter_domain="[('search_id', '=', self)]"/>
                 <filter string="Contato Não Criado" name="filter_not_created" domain="[('contact_created', '=', False)]"/>
                 <filter string="Contato Criado" name="filter_created" domain="[('contact_created', '=', True)]"/>
                 <group expand="0" string="Agrupar por...">
@@ -103,7 +106,7 @@
 
     <!-- Action Window -->
     <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
-        <field name="name">Leads Pesquisa AIIA</field>
+        <field name="name">Todos os Leads Recebidos</field>
         <field name="res_model">pesquisa_aiia.lead</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>

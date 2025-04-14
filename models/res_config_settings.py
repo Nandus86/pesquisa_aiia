@@ -43,6 +43,16 @@ Sua Equipe
         config_parameter='pesquisa_aiia.n8n_scrape_trigger_url',
         help="URL do webhook no N8N que recebe a solicitação de pesquisa do Odoo."
     )
+    aiia_odoo_update_webhook_url = fields.Char(
+        string='URL Odoo (Update Pesquisa)',
+        readonly=True, # Gerado automaticamente
+        help="URL que o N8N deve chamar para enviar status e token da próxima página."
+    )
+    aiia_odoo_update_secret = fields.Char(
+        string='Segredo Webhook (Update Pesquisa)',
+        config_parameter='pesquisa_aiia.aiia_odoo_update_secret',
+        help="Segredo opcional para validar atualizações de status/token vindas do N8N."
+    )
 
     @api.model
     def get_values(self):
@@ -51,5 +61,8 @@ Sua Equipe
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', default='http://localhost:8069')
         res.update(
             aiia_webhook_url=f"{base_url}/pesquisa_aiia/webhook"
+        )
+        res.update(
+             aiia_odoo_update_webhook_url=f"{base_url}/pesquisa_aiia/update_search"
         )
         return res

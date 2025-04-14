@@ -42,7 +42,7 @@ class PesquisaAiiaWebhook(http.Controller):
             return Response(json.dumps({'status': 'error', 'message': f'Erro ao processar corpo: {str(e)}'}),
                             content_type='application/json', status=500) # Internal Server Error
 
-        _logger.info("Webhook Pesquisa AIIA Recebido (processado manualmente): %s", json.dumps(webhook_data))
+        _logger.info("Webhook Pesquisa AIIA Recebido (Lead Individual): %s", json.dumps(webhook_data))
 
         # --- Validação de Segurança (Opcional) ---
         # ... (código de validação do segredo permanece o mesmo, usando request.httprequest.headers)
@@ -54,15 +54,29 @@ class PesquisaAiiaWebhook(http.Controller):
                              content_type='application/json', status=401) # Unauthorized
 
         # --- Validação dos Dados ---
-        required_fields = ['nome_empresa', 'contato_telefonico', 'email', 'endereco', 'resumo_atividade']
-        if not isinstance(webhook_data, dict) or not all(field in webhook_data for field in required_fields):
-            _logger.error("Webhook Pesquisa AIIA: Dados incompletos ou formato inválido - %s", webhook_data)
-            return Response(json.dumps({'status': 'error', 'message': 'Dados incompletos ou formato inválido'}),
-                            content_type='application/json', status=400) # Bad Request
+        required_fields = ['search_id', 'nome_empresa', 'contato_telefonico', 'email', 'endereco', 'resumo_atividade']
+        search_id = webhook_data.get('search_id') if isinstance(webhook_data, dict) else None
+        if not isinstance(webhook_data, dict) \
+           or not all(field in webhook_data for field in required_fields) \
+           or not isinstance(search_id, int): # Valida que search_id é int
+            _logger.error("Webhook AIIA Lead: Dados incompletos/inválidos recebidos - %s", webhook_data)
+            return Response(json.dumps({'status': 'error', 'message': 'Dados incompletos ou formato inválido (search_id obrigatório)'}),
+                            content_type='application/json', status=400)
 
         # --- Criação do Lead ---
         try:
+            # Verificar se a pesquisa existe (opcional mas bom)
+            search_record = request.env['pesquisa_aiia.search'].sudo().browse(search_id)
+            if not search_record.exists():
+                 _logger.error(f"Webhook AIIA Lead: Search ID {search_id} não encontrado ao tentar criar lead.")
+                 # Continuar criando o lead mas logar, ou retornar erro? Vamos continuar por enquanto.
+                 # return Response(json.dumps({'status': 'error', 'message': f'Search ID {search_id} não encontrado'}),
+                 #                 content_type='application/json', status=404)
+                 pass # Permite criar lead mesmo sem pesquisa válida (pode acontecer se a pesquisa for deletada)
+
+            # Criar o lead
             lead_vals = {
+                'search_id': search_id,
                 'name': webhook_data.get('nome_empresa'),
                 'phone': webhook_data.get('contato_telefonico'),
                 'email': webhook_data.get('email'),
@@ -71,7 +85,7 @@ class PesquisaAiiaWebhook(http.Controller):
             }
             # Usar sudo() porque auth='public'
             new_lead = request.env['pesquisa_aiia.lead'].sudo().create(lead_vals)
-            _logger.info("Webhook Pesquisa AIIA: Lead criado com ID: %s", new_lead.id)
+            _logger.info(f"Webhook AIIA Lead: Lead {new_lead.id} criado e vinculado à pesquisa {search_id}.")
 
             # Retornar sucesso como JSON Response
             response_data = {'status': 'success', 'lead_id': new_lead.id}

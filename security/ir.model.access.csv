@@ -1,4 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pesquisa_aiia_search_user,access.pesquisa_aiia.search.user,model_pesquisa_aiia_search,base.group_user,1,1,1,1
 access_pesquisa_aiia_lead_user,access.pesquisa_aiia.lead.user,model_pesquisa_aiia_lead,base.group_user,1,1,1,1
 access_pesquisa_aiia_lead_manager,access.pesquisa_aiia.lead.manager,model_pesquisa_aiia_lead,base.group_system,1,1,1,1
-access_pesquisa_aiia_scrape_wizard_user,access.pesquisa_aiia.scrape.wizard.user,model_pesquisa_aiia_scrape_wizard,base.group_user,1,1,1,1
