@@ -12,8 +12,8 @@ class PesquisaAiiaSearch(models.Model):
     _description = 'Registro de Pesquisa AIIA'
     _order = 'create_date desc'
 
-    name = fields.Char(string='Termo Pesquisado', related='search_query', store=True)
-    search_query = fields.Text(string='Consulta Original', readonly=True)
+    search_query = fields.Text(string='Consulta Original', readonly=True, required=True)
+    name = fields.Char(string='Termo Pesquisado (Resumo)', compute='_compute_name', store=True, readonly=True)
     user_id = fields.Many2one('res.users', string='Iniciado por', default=lambda self: self.env.user, readonly=True)
     create_date = fields.Datetime(string='Data da Criação', readonly=True, default=fields.Datetime.now)
     next_page_token = fields.Text(string='Token Próxima Página', readonly=True, copy=False)
@@ -28,6 +28,16 @@ class PesquisaAiiaSearch(models.Model):
     lead_count = fields.Integer(string='Nº Leads', compute='_compute_lead_count')
     error_message = fields.Text(string='Mensagem de Erro', readonly=True)
 
+    @api.depends('search_query')
+    def _compute_name(self):
+        for search in self:
+            if search.search_query:
+                # Define 'name' como os primeiros 100 caracteres de search_query
+                # Adiciona '...' se for maior
+                query = search.search_query
+                search.name = query[:100] + ('...' if len(query) > 100 else '')
+            else:
+                search.name = _('Pesquisa Vazia') # Caso search_query esteja vazio
     @api.depends('lead_ids')
     def _compute_lead_count(self):
         for search in self:
