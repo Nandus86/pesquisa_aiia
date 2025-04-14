@@ -71,7 +71,7 @@
     </record>
 
     <!-- Ação de Janela Principal MODIFICADA para Client Action -->
-    <record id="action_pesquisa_aiia_search_main" model="ir.actions.client">
+    <record id="action_pesquisa_aiia_search_main_client" model="ir.actions.client">
         <field name="name">Pesquisa AIIA</field>
         <field name="tag">pesquisa_aiia.action_client_search</field>
         <field name="target">current</field>
@@ -81,8 +81,7 @@
      <menuitem
         id="menu_pesquisa_aiia_root"
         name="Pesquisa AIIA"
-        action="action_pesquisa_aiia_search_main"
-        web_icon="pesquisa_aiia,static/description/icon.png"
+        action="action_pesquisa_aiia_search_main_client"
         sequence="10"/>
 
      <!-- Mantém o submenu para ver TODOS os leads, sem filtro -->
