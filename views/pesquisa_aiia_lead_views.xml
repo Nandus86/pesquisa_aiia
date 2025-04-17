@@ -6,27 +6,35 @@
         <field name="name">pesquisa.aiia.lead.tree</field>
         <field name="model">pesquisa_aiia.lead</field>
         <field name="arch" type="xml">
-            <tree string="Leads Pesquisa AIIA" decoration-muted="contact_created==True">
+            <!-- Adicionado tracking para atualizar a view quando os campos mudam -->
+            <tree string="Leads Pesquisa AIIA" decoration-muted="contact_created==True or opportunity_created==True">
                 <field name="search_id" optional="show" readonly="1"/>
                 <field name="name" string="Empresa"/>
                 <field name="phone" widget="phone"/>
                 <field name="email" widget="email"/>
                 <field name="address" optional="hide"/>
                 <field name="activity_summary" optional="hide"/>
-                <field name="use_default_message"/>
-                <field name="message_text" string="Mensagem Customizada"/>
+                <field name="use_default_message" optional="hide"/>
+                <field name="message_text" string="Mensagem Customizada" optional="hide"/>
                 <field name="contact_created" string="Contato Criado?"/>
+                <field name="opportunity_created" string="Oportunidade Criada?"/> <!-- Campo adicionado -->
                  <!-- Botões de Ação -->
-                <button name="action_send_whatsapp" type="object" string="WhatsApp" icon="fa-whatsapp" help="Enviar mensagem via WhatsApp"/>
-                <button name="action_send_email" type="object" string="E-mail" icon="fa-envelope-o" help="Enviar E-mail"/>
-                <!-- Substituído attrs por column_invisible para Odoo 17 -->
+                <button name="action_send_whatsapp" type="object" icon="fa-whatsapp" help="Enviar mensagem via WhatsApp"/>
+                <button name="action_send_email" type="object" icon="fa-envelope-o" help="Enviar E-mail"/>
+                <!-- Botão Criar Contato (Ajustado) -->
                 <button name="action_create_contact"
                         type="object"
                         string="Criar Contato"
                         icon="fa-user-plus"
-                        help="Criar Contato no Odoo"
+                        help="Criar Contato no Odoo (res.partner)"
                         column_invisible="[('contact_created', '=', True)]"/>
-                <!-- O botão de excluir padrão funciona -->
+                 <!-- NOVO Botão Criar Oportunidade -->
+                <button name="action_create_opportunity"
+                        type="object"
+                        string="Criar Oportunidade"
+                        icon="fa-star" 
+                        help="Criar Oportunidade no CRM (crm.lead)"
+                        column_invisible="[('opportunity_created', '=', True)]"/>
             </tree>
         </field>
     </record>
@@ -37,6 +45,9 @@
         <field name="model">pesquisa_aiia.lead</field>
         <field name="arch" type="xml">
             <form string="Lead Pesquisa AIIA">
+                 <header>
+                     <!-- Pode adicionar botões importantes aqui também se fizer sentido -->
+                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                          <button name="action_send_whatsapp" type="object" class="oe_stat_button" icon="fa-whatsapp">
@@ -45,15 +56,27 @@
                          <button name="action_send_email" type="object" class="oe_stat_button" icon="fa-envelope-o">
                             E-mail
                         </button>
-                         <!-- Substituído attrs por invisible para Odoo 17 (em form view) -->
+                         <!-- Botão Criar Contato (Ajustado) -->
                          <button name="action_create_contact"
                                  type="object"
                                  class="oe_stat_button"
                                  icon="fa-user-plus"
                                  invisible="[('contact_created', '=', True)]">
-                            Criar Contato
+                             <!-- Adicionado para exibir o nome do contato se criado -->
+                             <field name="created_partner_id" widget="statinfo" string="Ver Contato"
+                                    invisible="[('contact_created', '=', False)]"/>
+                             <span invisible="[('contact_created', '=', True)]">Criar Contato</span>
                         </button>
-                         <!-- Botão para voltar para a pesquisa origem (se houver) -->
+                         <!-- NOVO Botão Criar Oportunidade -->
+                         <button name="action_create_opportunity"
+                                 type="object"
+                                 class="oe_stat_button"
+                                 icon="fa-star"
+                                 invisible="[('opportunity_created', '=', True)]">
+                             <!-- Poderia ter um campo Many2one para linkar e exibir aqui -->
+                            Criar Oportunidade
+                        </button>
+                         <!-- Botão para voltar para a pesquisa origem -->
                          <button name="%(pesquisa_aiia.action_pesquisa_aiia_search_main)d" type="action"
                                  class="oe_stat_button" icon="fa-search"
                                  context="{'search_default_id': search_id, 'active_id': search_id}"
@@ -64,6 +87,10 @@
                              </div>
                          </button>
                     </div>
+                     <widget name="web_ribbon" title="Contato Criado" bg_color="bg-success"
+                            invisible="[('contact_created', '=', False)]"/>
+                     <widget name="web_ribbon" title="Oportunidade Criada" bg_color="bg-info"
+                            invisible="[('opportunity_created', '=', False)]"/>
                     <group name="group_top">
                         <group name="group_left">
                             <field name="name"/>
@@ -73,7 +100,9 @@
                         </group>
                         <group name="group_right">
                             <field name="address"/>
-                             <field name="contact_created"/>
+                             <field name="contact_created" widget="boolean_toggle"/>
+                             <field name="created_partner_id" readonly="1" invisible="[('contact_created', '=', False)]"/>
+                             <field name="opportunity_created" widget="boolean_toggle"/>
                         </group>
                     </group>
                     <notebook>
@@ -83,7 +112,6 @@
                              </group>
                             <group string="Mensagem a ser Enviada">
                                 <field name="use_default_message"/>
-                                <!-- Substituído attrs por invisible para Odoo 17 (em form view) -->
                                 <field name="message_text"
                                        placeholder="Digite aqui a mensagem customizada a ser enviada..."
                                        invisible="[('use_default_message', '=', True)]"/>
@@ -91,37 +119,23 @@
                          </page>
                     </notebook>
                 </sheet>
+                 <!-- Adicionando o chatter -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
 
-    <!-- Search View -->
-    <record id="view_pesquisa_aiia_lead_search" model="ir.ui.view">
-        <field name="name">pesquisa.aiia.lead.search</field>
-        <field name="model">pesquisa_aiia.lead</field>
-        <field name="arch" type="xml">
-            <search string="Pesquisar Leads AIIA">
-                <field name="name" string="Empresa"/>
-                <field name="email"/>
-                <field name="phone"/>
-                <field name="search_id" string="Pesquisa Origem"/> <!-- Removido filter_domain, busca normal pelo campo -->
-                <filter string="Contato Não Criado" name="filter_not_created" domain="[('contact_created', '=', False)]"/>
-                <filter string="Contato Criado" name="filter_created" domain="[('contact_created', '=', True)]"/>
-                <group expand="0" string="Agrupar por...">
-                    <filter string="Contato Criado" name="groupby_contact_created" domain="[]" context="{'group_by':'contact_created'}"/>
-                    <filter string="Pesquisa Origem" name="groupby_search_id" domain="[]" context="{'group_by':'search_id'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
-
-    <!-- Action Window para "Todos os Leads" -->
+    <!-- Action Window para "Todos os Leads" (Sem mudanças aqui) -->
     <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
-        <field name="name">Todos os Leads</field> <!-- Nome alterado -->
+        <field name="name">Todos os Leads</field>
         <field name="res_model">pesquisa_aiia.lead</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>
-        <field name="context">{}</field> <!-- Contexto limpo, mostra todos -->
+        <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Nenhum lead recebido ainda.
@@ -131,16 +145,12 @@
         </field>
     </record>
 
-    <!-- Menu Items -->
-    <!-- O menu raiz é definido em pesquisa_aiia_search_views.xml -->
-    <!-- Menu para "Todos os Leads" (antigo "Leads Recebidos") -->
+    <!-- Menu Items (Sem mudanças aqui) -->
     <menuitem
         id="menu_pesquisa_aiia_all_leads"
-        name="Todos os Leads" 
-        parent="pesquisa_aiia.menu_pesquisa_aiia_root" 
+        name="Todos os Leads"
+        parent="pesquisa_aiia.menu_pesquisa_aiia_root"
         action="action_pesquisa_aiia_leads"
-        sequence="20"/> 
-
-    <!-- O menu de Configurações é definido em res_config_settings_views.xml -->
+        sequence="20"/>
 
 </odoo>
