@@ -53,6 +53,16 @@
                                  invisible="[('contact_created', '=', True)]">
                             Criar Contato
                         </button>
+                         <!-- Botão para voltar para a pesquisa origem (se houver) -->
+                         <button name="%(pesquisa_aiia.action_pesquisa_aiia_search_main)d" type="action"
+                                 class="oe_stat_button" icon="fa-search"
+                                 context="{'search_default_id': search_id, 'active_id': search_id}"
+                                 invisible="[('search_id', '=', False)]">
+                             <div class="o_field_widget o_stat_info">
+                                 <span class="o_stat_text">Ver</span>
+                                 <span class="o_stat_text">Pesquisa</span>
+                             </div>
+                         </button>
                     </div>
                     <group name="group_top">
                         <group name="group_left">
@@ -94,40 +104,43 @@
                 <field name="name" string="Empresa"/>
                 <field name="email"/>
                 <field name="phone"/>
-                <field name="search_id" string="Pesquisa Origem" filter_domain="[('search_id', '=', self)]"/>
+                <field name="search_id" string="Pesquisa Origem"/> <!-- Removido filter_domain, busca normal pelo campo -->
                 <filter string="Contato Não Criado" name="filter_not_created" domain="[('contact_created', '=', False)]"/>
                 <filter string="Contato Criado" name="filter_created" domain="[('contact_created', '=', True)]"/>
                 <group expand="0" string="Agrupar por...">
                     <filter string="Contato Criado" name="groupby_contact_created" domain="[]" context="{'group_by':'contact_created'}"/>
+                    <filter string="Pesquisa Origem" name="groupby_search_id" domain="[]" context="{'group_by':'search_id'}"/>
                 </group>
             </search>
         </field>
     </record>
 
-    <!-- Action Window -->
+    <!-- Action Window para "Todos os Leads" -->
     <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
-        <field name="name">Todos os Leads Recebidos</field>
+        <field name="name">Todos os Leads</field> <!-- Nome alterado -->
         <field name="res_model">pesquisa_aiia.lead</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>
-        <field name="context">{'create_action': 'pesquisa_aiia.action_pesquisa_aiia_search_wizard'}</field>
+        <field name="context">{}</field> <!-- Contexto limpo, mostra todos -->
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Nenhum lead recebido ainda. Configure o webhook no N8N!
+                Nenhum lead recebido ainda.
+            </p><p>
+                Use a opção 'Nova Pesquisa' para buscar leads ou configure o webhook no N8N.
             </p>
         </field>
     </record>
 
     <!-- Menu Items -->
+    <!-- O menu raiz é definido em pesquisa_aiia_search_views.xml -->
+    <!-- Menu para "Todos os Leads" (antigo "Leads Recebidos") -->
     <menuitem
-        id="menu_pesquisa_aiia_root"
-        name="Pesquisa AIIA"
-        sequence="10"/>
-
-    <menuitem
-        id="menu_pesquisa_aiia_leads"
-        name="Leads Recebidos"
-        parent="menu_pesquisa_aiia_root"
+        id="menu_pesquisa_aiia_all_leads"
+        name="Todos os Leads" 
+        parent="pesquisa_aiia.menu_pesquisa_aiia_root" 
         action="action_pesquisa_aiia_leads"
-        sequence="10"/>
+        sequence="20"/> 
+
+    <!-- O menu de Configurações é definido em res_config_settings_views.xml -->
+
 </odoo>

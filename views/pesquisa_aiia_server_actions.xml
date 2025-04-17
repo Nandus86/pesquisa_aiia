@@ -1,30 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Ação do Servidor para chamar o método action_search_next_page -->
+        <!-- Ação do Servidor para chamar o método search_next_page -->
         <record id="action_server_search_next_page" model="ir.actions.server">
             <field name="name">Pesquisar Próxima Página (Ação)</field>
-            <!-- Modelo onde o método Python está definido -->
             <field name="model_id" ref="model_pesquisa_aiia_search"/>
-            <!-- Modelo onde esta ação ficará disponível no menu "Ação" (opcional, podemos remover se não quisermos no menu) -->
             <field name="binding_model_id" ref="model_pesquisa_aiia_search"/>
-            <field name="binding_view_types">list,form</field> <!-- Disponível em lista e form -->
-            <!-- Define que executa código Python -->
+            <field name="binding_view_types">list,form</field>
             <field name="state">code</field>
-            <!-- O código Python chama o método nos registros selecionados/ativos -->
             <field name="code">
-# 'records' contém os registros selecionados (ou o registro ativo no form)
-# Precisamos iterar caso múltiplos sejam selecionados (embora o botão do header seja para um só)
+# 'records' contém os registros selecionados/ativos
 if records:
-    # Chamamos o método diretamente nos registros
-    # A validação ensure_one dentro do método Python cuidará de erros se chamado em múltiplos
-    # O método Python já levanta UserError em caso de falha, que será mostrado ao usuário
-    records.search_next_page()
+    # Chama o método nos registros (ensure_one dentro do método cuida se for lista)
+    try:
+        records.search_next_page()
+        # Adiciona um refresh da view após a execução bem-sucedida
+        action = {'type': 'ir.actions.client', 'tag': 'reload'}
+    except Exception as e:
+        # Se search_next_page levantar UserError ou outro erro, ele será exibido
+        # e a ação de reload não será executada. O erro é repassado.
+        raise e
 
-# Não precisamos definir 'response' aqui, a menos que queiramos
-# redirecionar ou fazer algo após a execução. O padrão é permanecer na tela.
-# Podemos adicionar um refresh se desejado:
-# response = {'type': 'ir.actions.client', 'tag': 'reload'}
             </field>
         </record>
     </data>

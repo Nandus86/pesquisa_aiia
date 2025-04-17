@@ -44,9 +44,16 @@ class PesquisaAiiaSearch(models.Model):
 
     @api.depends('lead_ids')
     def _compute_lead_count(self):
+        # Calcular via search_count é mais eficiente
+        # Para evitar problemas com subqueries em alguns cenários, podemos usar um read_group
+        # ou, para simplicidade aqui, o search_count que geralmente funciona bem.
+        lead_data = self.env['pesquisa_aiia.lead']._read_group(
+            [('search_id', 'in', self.ids)],
+            ['search_id'], ['search_id'])
+        mapped_data = {data['search_id'][0]: data['search_id_count'] for data in lead_data}
         for search in self:
-            # Usar search_count é mais performático para muitos leads
-            search.lead_count = self.env['pesquisa_aiia.lead'].search_count([('search_id', '=', search.id)])
+            search.lead_count = mapped_data.get(search.id, 0)
+
 
     def _get_n8n_trigger_url(self):
         # ... (código igual)
@@ -58,9 +65,6 @@ class PesquisaAiiaSearch(models.Model):
 
     def _send_request_to_n8n(self, payload):
         # ... (código interno de envio, tratamento de erro e status igual ao anterior) ...
-        # Importante: este método apenas ENVIA o payload recebido.
-        # A lógica de *qual* payload enviar (com query ou com token)
-        # está nos métodos que chamam este (_start_new_search_request, _search_next_page_request).
         self.ensure_one()
         n8n_trigger_url = self._get_n8n_trigger_url()
         headers = {'Content-Type': 'application/json'}
@@ -69,7 +73,6 @@ class PesquisaAiiaSearch(models.Model):
 
         # Garante que status vá para 'processing' e limpa erros
         write_vals = {'status': 'processing', 'error_message': False}
-        # NUNCA limpar token aqui, ele só é atualizado pelo webhook /update_search
         self.write(write_vals)
         self.env.cr.commit() # Garante atualização antes da chamada externa
 
@@ -109,7 +112,7 @@ class PesquisaAiiaSearch(models.Model):
     def start_new_search(self, query, message=None):
         """
         Cria um novo registro de pesquisa e envia a solicitação INICIAL para N8N.
-        Não usa next_page_token.
+        Retorna o ID do registro criado.
         """
         if not query or not query.strip():
             raise ValidationError(_("O termo de pesquisa não pode estar vazio."))
@@ -135,12 +138,16 @@ class PesquisaAiiaSearch(models.Model):
         try:
             # Chama o método de envio interno
             search_record._send_request_to_n8n(payload)
-            return search_record.id # Retorna ID para o wizard
+            # Requisição enviada, o status está 'processing'
+            return search_record.id # Retorna ID para o wizard/chamador
         except (UserError, ValidationError) as e:
-            # Se o envio falhar, o status já foi para 'error'. Repassa o erro.
+            # Se o envio falhar (_send_request_to_n8n já trata o erro e status)
+            # O registro já existe, mas está com status 'error'. Repassa o erro.
             # Considerar deletar o registro se o envio inicial falhar?
-            # search_record.unlink()
-            raise e
+            # Se sim:
+            # if search_record and search_record.exists():
+            #    search_record.unlink()
+            raise e # Repassa o erro para ser exibido ao usuário
 
 
     # --- MÉTODO PARA BUSCAR PRÓXIMA PÁGINA (Chamado pela Server Action/Botão Form) ---
@@ -174,8 +181,10 @@ class PesquisaAiiaSearch(models.Model):
         try:
              # Chama o mesmo método de envio interno
              self._send_request_to_n8n(payload)
-             # Se chegou aqui, a requisição foi enviada. Aguarda webhook de update.
-             return True # Indica sucesso para a Server Action/Botão
+             # Se chegou aqui, a requisição foi enviada. Status vai para 'processing'.
+             # Não retornamos nada explícito aqui, a ação do botão simplesmente termina.
+             # Um refresh automático da tela pode ser útil, configurado na ação do botão/server action.
+             return True # Indica sucesso para a Server Action/Botão (opcional)
         except (UserError, ValidationError) as e:
              # Repassa o erro que já atualizou o status para 'error'
              raise e
@@ -185,6 +194,9 @@ class PesquisaAiiaSearch(models.Model):
         # ... (código igual)
         self.ensure_one()
         action = self.env['ir.actions.act_window']._for_xml_id('pesquisa_aiia.action_pesquisa_aiia_leads')
+        # Modifica o nome da ação para clareza
+        action['name'] = _('Leads da Pesquisa: %s') % self.name
+        action['display_name'] = action['name'] # Garante que o título da janela seja atualizado
         action['domain'] = [('search_id', '=', self.id)]
-        action['context'] = {'default_search_id': self.id}
+        action['context'] = {'default_search_id': self.id, 'search_default_search_id': self.id} # Pré-filtra
         return action

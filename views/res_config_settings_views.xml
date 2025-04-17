@@ -6,61 +6,49 @@
         <field name="priority" eval="90"/>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <!--
-            Abordagem Robusta: Insere o bloco dentro do elemento raiz <form>.
-            Isso é menos propenso a quebrar entre versões do Odoo do que
-            depender de classes CSS específicas como 'settings' ou 'o_setting_container'.
-            -->
-            <xpath expr="/form" position="inside">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
                  <div class="app_settings_block" data-string="Pesquisa AIIA" string="Pesquisa AIIA" data-key="pesquisa_aiia">
-                    <h2>Configurações do Webhook e Mensagens</h2>
+                    <h2>Configurações N8N e Mensagens Padrão</h2>
                     <div class="row mt16 o_settings_container" id="pesquisa_aiia_settings">
 
-                        <!-- Bloco de Configuração do Webhook -->
+                        <!-- Bloco Webhook Recebimento (N8N -> Odoo) -->
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <!-- Ícone ou Checkbox (Opcional) -->
-                            </div>
                             <div class="o_setting_right_pane">
-                                <label for="aiia_webhook_url" string="URL Webhook N8N (Leitura)"/>
-                                <field name="aiia_webhook_url" readonly="1"/> <!-- É readonly no Python, melhor marcar aqui também -->
+                                <label for="aiia_webhook_url" string="URL Webhook (Receber Leads)"/>
+                                <field name="aiia_webhook_url" readonly="1"/>
                                 <div class="text-muted">
-                                    Use esta URL no seu fluxo N8N para enviar dados via POST JSON.
+                                    Seu N8N deve enviar POST (JSON com lista de leads) para esta URL.
                                 </div>
                                 <label for="aiia_webhook_secret" class="mt-2"/>
-                                <field name="aiia_webhook_secret" placeholder="Opcional: defina um segredo aqui e no N8N"/>
+                                <field name="aiia_webhook_secret" placeholder="Opcional: defina um segredo aqui e no N8N" password="True"/>
                                 <div class="text-muted">
-                                     Adicione segurança extra validando um segredo.
+                                     Adicione no header 'X-N8N-Signature' no N8N.
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Bloco Webhook Update Status (N8N -> Odoo) -->
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
-                                <label for="aiia_odoo_update_webhook_url" string="URL Odoo (Update Pesquisa)"/>
+                                <label for="aiia_odoo_update_webhook_url" string="URL Webhook (Atualizar Status)"/>
+                                <field name="aiia_odoo_update_webhook_url" readonly="1"/>
                                 <div class="text-muted">
-                                    URL que o N8N chama para atualizar o status e token da próxima página.
+                                     Seu N8N deve chamar esta URL para enviar status e token da próxima página.
                                 </div>
-                                <div class="content-group mt16">
-                                    <field name="aiia_odoo_update_webhook_url" readonly="1"/>
-                                </div>
-                                    <label for="aiia_odoo_update_secret" class="mt-2"/>
+                                <label for="aiia_odoo_update_secret" class="mt-2"/>
+                                <field name="aiia_odoo_update_secret" placeholder="Defina um segredo seguro" password="True"/>
                                 <div class="text-muted">
-                                 Segredo opcional para validar updates vindos do N8N (envie no header 'X-N8N-Odoo-Update-Secret').
-                                </div>
-                                <div class="content-group mt16">
-                                    <field name="aiia_odoo_update_secret" placeholder="Defina um segredo seguro" password="True"/>
+                                 Adicione no header 'X-N8N-Odoo-Update-Secret' no N8N.
                                 </div>
                             </div>
                         </div>
 
+                         <!-- Bloco Webhook Iniciar Scraping (Odoo -> N8N) -->
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="aiia_n8n_scrape_trigger_url"/>
                                 <div class="text-muted">
-                                   URL no N8N para onde o Odoo enviará as solicitações de pesquisa.
+                                   URL do Webhook no N8N que o Odoo chamará para iniciar/continuar pesquisas.
                                 </div>
                                 <div class="content-group mt16">
                                    <field name="aiia_n8n_scrape_trigger_url" class="oe_inline" placeholder="https://seu-n8n.com/webhook/iniciar-scraping-aiia"/>
@@ -68,35 +56,26 @@
                             </div>
                         </div>
 
-                         <!-- Bloco de Configuração da Mensagem WhatsApp -->
+                         <!-- Bloco Mensagens Padrão -->
                          <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <!-- Ícone ou Checkbox (Opcional) -->
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="aiia_default_whatsapp_msg"/>
-                                <field name="aiia_default_whatsapp_msg" widget="text" class="oe_inline" placeholder="Ex: Olá [Nome da Empresa]..."/>
-                                <div class="text-muted">
-                                    Mensagem padrão para envio via WhatsApp (se a opção estiver marcada no lead).
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bloco de Configuração do E-mail -->
-                        <div class="col-12 col-lg-6 o_setting_box">
-                             <div class="o_setting_left_pane">
-                                <!-- Ícone ou Checkbox (Opcional) -->
-                             </div>
                              <div class="o_setting_right_pane">
-                                <label for="aiia_default_email_subject"/>
-                                <field name="aiia_default_email_subject" placeholder="Ex: Contato sobre sua empresa"/>
-                                 <div class="text-muted">
-                                    Assunto padrão para envio de e-mail.
-                                </div>
-                                <label for="aiia_default_email_body" class="mt-2"/>
-                                <field name="aiia_default_email_body" widget="text" placeholder="Ex: Prezados da [Nome da Empresa]..."/>
+                                <span class="o_form_label">Mensagens Padrão</span>
                                 <div class="text-muted">
-                                    Corpo padrão para envio de e-mail (se a opção estiver marcada no lead).
+                                     Defina textos padrão para agilizar o contato.
+                                </div>
+                                <div class="content-group">
+                                    <div class="mt16">
+                                        <label for="aiia_default_whatsapp_msg" string="WhatsApp" class="o_light_label"/>
+                                        <field name="aiia_default_whatsapp_msg" widget="text" placeholder="Ex: Olá [Nome da Empresa]..."/>
+                                    </div>
+                                    <div class="mt16">
+                                        <label for="aiia_default_email_subject" string="Assunto E-mail" class="o_light_label"/>
+                                        <field name="aiia_default_email_subject" placeholder="Ex: Contato sobre sua empresa"/>
+                                    </div>
+                                     <div class="mt16">
+                                        <label for="aiia_default_email_body" string="Corpo E-mail" class="o_light_label"/>
+                                        <field name="aiia_default_email_body" widget="text" placeholder="Ex: Prezados da [Nome da Empresa]..."/>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -114,17 +93,16 @@
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
         <field name="target">inline</field>
-        <!-- O contexto 'module' garante que apenas as configurações deste app sejam salvas -->
+        <!-- O contexto 'module' garante que apenas as configurações deste app sejam exibidas/salvas -->
         <field name="context">{'module' : 'pesquisa_aiia', 'bin_size': False}</field>
     </record>
 
-    <!-- Menu Item para acessar as Configurações -->
-    <!-- Certifique-se de que 'menu_pesquisa_aiia_root' está definido em outro arquivo XML (como pesquisa_aiia_lead_views.xml) -->
+    <!-- Menu Item para acessar as Configurações (Último item) -->
     <menuitem
         id="menu_pesquisa_aiia_config"
         name="Configurações"
-        parent="pesquisa_aiia.menu_pesquisa_aiia_root"
-        sequence="99"
+        parent="pesquisa_aiia.menu_pesquisa_aiia_root" # Referencia o menu raiz
+        sequence="99" # Garante que seja o último
         action="action_pesquisa_aiia_config_settings"
         groups="base.group_system"/> <!-- Apenas administradores podem configurar -->
 

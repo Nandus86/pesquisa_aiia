@@ -7,17 +7,19 @@
             <field name="name">pesquisa.aiia.search.tree</field>
             <field name="model">pesquisa_aiia.search</field>
             <field name="arch" type="xml">
-                <!-- A tag <header> FOI REMOVIDA daqui -->
                 <tree string="Histórico de Pesquisas AIIA" default_order="create_date desc">
                     <!-- Campos da lista -->
                     <field name="name" string="Termo Pesquisado"/>
                     <field name="user_id"/>
                     <field name="create_date"/>
-                    <field name="status"/>
+                    <field name="status" widget="badge" decoration-success="status == 'completed'" decoration-info="status == 'processing' or status == 'pending_next'" decoration-warning="status == 'new'" decoration-danger="status == 'error'"/>
                     <field name="lead_count" string="Leads"/>
                     <field name="next_page_token" optional="hide"/>
                     <!-- Botão para ver resultados (leads) diretamente da lista -->
                     <button name="action_view_results" type="object" string="Ver Leads" icon="fa-list"/>
+                     <!-- Botão para chamar a Server Action da Próxima Página -->
+                     <button name="%(pesquisa_aiia.action_server_search_next_page)d" type="action" string="Próx. Página" icon="fa-arrow-right"
+                             column_invisible="[('next_page_token', '=', False)]" help="Pesquisar próxima página de resultados"/>
                 </tree>
             </field>
         </record>
@@ -30,7 +32,6 @@
                 <form string="Detalhes da Pesquisa AIIA">
                     <header>
                          <!-- Botão para chamar a Server Action da Próxima Página -->
-                         <!-- Certifique-se que o ID da server action é 'action_server_search_next_page' -->
                          <button name="%(pesquisa_aiia.action_server_search_next_page)d" type="action" string="Pesquisar Próxima Página" class="btn-primary"
                                  invisible="[('next_page_token', '=', False)]"/>
                          <!-- Status bar -->
@@ -46,7 +47,7 @@
                         <group>
                              <group>
                                   <field name="search_query" readonly="1"/>
-                                  <field name="user_id" readonly="1"/>
+                                  <field name="user_id" readonly="1" widget="many2one_avatar_user"/>
                                   <field name="create_date" readonly="1"/>
                              </group>
                              <group>
@@ -64,7 +65,6 @@
                                             <field name="phone"/>
                                             <field name="email"/>
                                             <field name="create_date" optional="hide"/>
-                                            <!-- Adicione botões de ação rápida aqui se desejar (ex: abrir lead) -->
                                              <button name="action_send_whatsapp" type="object" icon="fa-whatsapp" help="Enviar WhatsApp"/>
                                              <button name="action_send_email" type="object" icon="fa-envelope-o" help="Enviar Email"/>
                                              <button name="action_create_contact" type="object" icon="fa-user-plus" help="Criar Contato" invisible="[('contact_created', '=', True)]"/>
@@ -73,21 +73,47 @@
                              </page>
                         </notebook>
                     </sheet>
+                     <!-- Adicionando o chatter -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>
 
-        <!-- Ação de Janela Principal (Substitui a Client Action) -->
+         <!-- Search View para Histórico de Pesquisas -->
+        <record id="view_pesquisa_aiia_search_filter" model="ir.ui.view">
+            <field name="name">pesquisa.aiia.search.filter</field>
+            <field name="model">pesquisa_aiia.search</field>
+            <field name="arch" type="xml">
+                <search string="Pesquisar Histórico">
+                    <field name="name" string="Termo Pesquisado"/>
+                    <field name="search_query"/>
+                    <field name="user_id"/>
+                    <filter string="Com Erro" name="filter_error" domain="[('status', '=', 'error')]"/>
+                    <filter string="Concluídas" name="filter_completed" domain="[('status', '=', 'completed')]"/>
+                    <filter string="Aguardando Próxima Página" name="filter_pending" domain="[('status', '=', 'pending_next')]"/>
+                    <filter string="Em Processamento" name="filter_processing" domain="[('status', '=', 'processing')]"/>
+                    <group expand="0" string="Agrupar por...">
+                        <filter string="Status" name="groupby_status" domain="[]" context="{'group_by':'status'}"/>
+                        <filter string="Usuário" name="groupby_user" domain="[]" context="{'group_by':'user_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+
+        <!-- Ação de Janela Principal (Histórico de Pesquisas) -->
         <record id="action_pesquisa_aiia_search_main" model="ir.actions.act_window">
-            <field name="name">Histórico de Pesquisas AIIA</field>
+            <field name="name">Histórico de Pesquisas</field> <!-- Nome alterado para clareza -->
             <field name="res_model">pesquisa_aiia.search</field>
             <field name="view_mode">tree,form</field>
-            <!-- Opcional: referenciar views específicas se houver mais de uma -->
             <field name="view_ids" eval="[(5, 0, 0),
                 (0, 0, {'view_mode': 'tree', 'view_id': ref('view_pesquisa_aiia_search_tree')}),
                 (0, 0, {'view_mode': 'form', 'view_id': ref('view_pesquisa_aiia_search_form')})]"/>
-            <!-- Adicione search_view_id se você criar uma view de pesquisa -->
-            <!-- <field name="search_view_id" ref="view_pesquisa_aiia_search_filter"/> -->
+            <field name="search_view_id" ref="view_pesquisa_aiia_search_filter"/>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
                     Nenhuma pesquisa realizada ainda.
@@ -97,40 +123,31 @@
             </field>
         </record>
 
-        <!-- Menu Item Principal (Raiz do App) - DEVE SER ATUALIZADO -->
-        <!-- Certifique-se que você tem a definição do menu raiz em algum lugar -->
-        <!-- E que ele agora aponta para 'action_pesquisa_aiia_search_main' -->
-        <!-- Exemplo (se ele estiver neste arquivo, senão modifique onde ele está): -->
+        <!-- Menu Item Principal (Raiz do App) -->
         <menuitem
             id="menu_pesquisa_aiia_root"
             name="Pesquisa AIIA"
-            action="action_pesquisa_aiia_search_main" 
-            sequence="10"/>
+            web_icon="pesquisa_aiia,static/description/icon.png" 
+            sequence="10"/> <!-- Sequência principal -->
 
-        <!-- Mantém o submenu para ver TODOS os leads, sem filtro (se já existia) -->
+        <!-- Menu Item para abrir o Wizard de Nova Pesquisa (Primeiro item) -->
         <menuitem
-            id="menu_pesquisa_aiia_leads_all"
-            name="Todos os Leads Recebidos"
-            parent="menu_pesquisa_aiia_root"
-            action="pesquisa_aiia.action_pesquisa_aiia_leads"
-            sequence="20"/>
-
-         <!-- Mantém o submenu para Configurações (se já existia) -->
-         <menuitem
-            id="menu_pesquisa_aiia_config"
-            name="Configurações"
-            parent="menu_pesquisa_aiia_root"
-            sequence="99"
-            action="action_pesquisa_aiia_config_settings"
-            groups="base.group_system"/>
-
-          <!-- Menu Item para abrir o Wizard de Nova Pesquisa -->
-          <menuitem
             id="menu_pesquisa_aiia_new_search_wizard"
             name="Nova Pesquisa"
-            parent="menu_pesquisa_aiia_root" 
-            action="action_open_pesquisa_aiia_search_wizard" 
-            sequence="15"/>
+            parent="menu_pesquisa_aiia_root"
+            action="pesquisa_aiia.action_open_pesquisa_aiia_search_wizard"
+            sequence="1"/> 
+
+        <!-- Menu Item para o Histórico de Pesquisas (Segundo item) -->
+        <menuitem
+            id="menu_pesquisa_aiia_search_history"
+            name="Histórico de Pesquisas"
+            parent="menu_pesquisa_aiia_root"
+            action="action_pesquisa_aiia_search_main"
+            sequence="10"/> <!-- Sequência após Nova Pesquisa -->
+
+         <!-- O Menu para "Todos os Leads" está em pesquisa_aiia_lead_views.xml (sequence 20) -->
+         <!-- O Menu para "Configurações" está em res_config_settings_views.xml (sequence 99) -->
 
     </data>
 </odoo>
