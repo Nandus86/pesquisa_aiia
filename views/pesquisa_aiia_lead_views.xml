@@ -119,15 +119,37 @@
         </field>
     </record>
 
-    <!-- Action Window para "Todos os Leads" (Corrigido novamente) -->
+    <!-- Search View (Definida ANTES da Ação) -->
+    <record id="view_pesquisa_aiia_lead_search" model="ir.ui.view">
+        <field name="name">pesquisa.aiia.lead.search</field>
+        <field name="model">pesquisa_aiia.lead</field>
+        <field name="arch" type="xml">
+            <search string="Pesquisar Leads AIIA">
+                <field name="name" string="Empresa"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="search_id" string="Pesquisa Origem"/>
+                <filter string="Contato Não Criado" name="filter_not_created" domain="[('contact_created', '=', False)]"/>
+                <filter string="Contato Criado" name="filter_created" domain="[('contact_created', '=', True)]"/>
+                 <filter string="Oportunidade Não Criada" name="filter_opp_not_created" domain="[('opportunity_created', '=', False)]"/>
+                 <filter string="Oportunidade Criada" name="filter_opp_created" domain="[('opportunity_created', '=', True)]"/>
+                <group expand="0" string="Agrupar por...">
+                    <filter string="Contato Criado" name="groupby_contact_created" domain="[]" context="{'group_by':'contact_created'}"/>
+                    <filter string="Oportunidade Criada" name="groupby_opportunity_created" domain="[]" context="{'group_by':'opportunity_created'}"/>
+                    <filter string="Pesquisa Origem" name="groupby_search_id" domain="[]" context="{'group_by':'search_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Window para "Todos os Leads" (Definida DEPOIS da Search View) -->
     <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
         <field name="name">Todos os Leads</field>
         <field name="res_model">pesquisa_aiia.lead</field>
         <field name="view_mode">tree,form</field>
-        <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>
+        <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/> 
         <field name="context">{}</field>
         <field name="help" type="html">
-            <!-- *** Comentários removidos daqui *** -->
             <p class="o_view_nocontent_smiling_face">
                 Nenhum lead recebido ainda.
             </p>
