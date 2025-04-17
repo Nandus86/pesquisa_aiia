@@ -101,9 +101,8 @@
     <menuitem
         id="menu_pesquisa_aiia_config"
         name="Configurações"
-        parent="pesquisa_aiia.menu_pesquisa_aiia_root" # Referencia o menu raiz
-        sequence="99" # Garante que seja o último
+        parent="pesquisa_aiia.menu_pesquisa_aiia_root"
+        sequence="99"                                    
         action="action_pesquisa_aiia_config_settings"
-        groups="base.group_system"/> <!-- Apenas administradores podem configurar -->
-
+        groups="base.group_system"/> 
 </odoo>
