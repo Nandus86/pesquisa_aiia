@@ -7,12 +7,8 @@
             <field name="name">pesquisa.aiia.search.tree</field>
             <field name="model">pesquisa_aiia.search</field>
             <field name="arch" type="xml">
+                <!-- A tag <header> FOI REMOVIDA daqui -->
                 <tree string="Histórico de Pesquisas AIIA" default_order="create_date desc">
-                    <header>
-                        <!-- Botão para abrir o Wizard de Nova Pesquisa -->
-                        <!-- Certifique-se que o ID da ação do wizard é 'action_open_pesquisa_aiia_search_wizard' -->
-                        <button name="%(pesquisa_aiia.action_open_pesquisa_aiia_search_wizard)d" string="Nova Pesquisa" type="action" class="btn-primary"/>
-                    </header>
                     <!-- Campos da lista -->
                     <field name="name" string="Termo Pesquisado"/>
                     <field name="user_id"/>
@@ -127,6 +123,14 @@
             sequence="99"
             action="action_pesquisa_aiia_config_settings"
             groups="base.group_system"/>
+
+          <!-- Menu Item para abrir o Wizard de Nova Pesquisa -->
+          <menuitem
+            id="menu_pesquisa_aiia_new_search_wizard"
+            name="Nova Pesquisa"
+            parent="menu_pesquisa_aiia_root" 
+            action="action_open_pesquisa_aiia_search_wizard" 
+            sequence="15"/>
 
     </data>
 </odoo>
