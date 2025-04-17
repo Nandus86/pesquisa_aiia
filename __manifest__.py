@@ -8,7 +8,7 @@
         armazená-las como leads e fornecer ações rápidas (WhatsApp, Email, etc.).
     """,
     'category': 'Sales/CRM',
-    'author': 'Fernando Dias - v2.0.10.2',
+    'author': 'Fernando Dias - v2.0.11',
     'website': '',
     'license': 'LGPL-3', 
     'depends': [
@@ -20,19 +20,10 @@
         'security/ir.model.access.csv', 
         'views/pesquisa_aiia_server_actions.xml',
         'views/pesquisa_aiia_lead_views.xml',          
-        'views/pesquisa_aiia_search_views.xml',        
+        'views/pesquisa_aiia_search_views.xml',
+        'views/pesquisa_aiia_search_wizard_view.xml',       
         'views/res_config_settings_views.xml'
     ],
-    'assets': {
-        'web.assets_backend': [
-
-           'pesquisa_aiia/static/src/components/pesquisa_aiia_search_component/pesquisa_aiia_search_component.js',
-           'pesquisa_aiia/static/src/js/pesquisa_aiia_action.js',
-        ],
-         'web.assets_qweb': [ 
-            'pesquisa_aiia/static/src/components/pesquisa_aiia_search_component/pesquisa_aiia_search_component.xml',
-        ],
-    },
     'installable': True,
     'application': True, 
     'auto_install': False,

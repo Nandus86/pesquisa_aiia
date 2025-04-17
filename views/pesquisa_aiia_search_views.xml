@@ -1,98 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <data>
 
-    <!-- View Tree para Pesquisas -->
-    <record id="view_pesquisa_aiia_search_tree" model="ir.ui.view">
-        <field name="name">pesquisa.aiia.search.tree</field>
-        <field name="model">pesquisa_aiia.search</field>
-        <field name="arch" type="xml">
-            <tree string="Pesquisas AIIA" default_order="create_date desc">
-                <field name="name" string="Termo Pesquisado"/>
-                <field name="user_id"/>
-                <field name="create_date"/>
-                <field name="status"/>
-                <field name="lead_count" string="Leads"/>
-                <field name="next_page_token" optional="hide"/>
-                 <!-- Botão para ver resultados diretamente da lista -->
-                 <button name="action_view_results" type="object" string="Ver Leads" icon="fa-list"/>
-                 <!-- *** BOTÃO REMOVIDO DA TREE VIEW *** -->
-                 <!--
-                 <button name="action_search_next_page" type="object" string="Próxima Página" icon="fa-arrow-right"
-                         column_invisible="[('next_page_token', '=', False)]"/>
-                 -->
-            </tree>
-        </field>
-    </record>
+        <!-- View Tree para Histórico de Pesquisas -->
+        <record id="view_pesquisa_aiia_search_tree" model="ir.ui.view">
+            <field name="name">pesquisa.aiia.search.tree</field>
+            <field name="model">pesquisa_aiia.search</field>
+            <field name="arch" type="xml">
+                <tree string="Histórico de Pesquisas AIIA" default_order="create_date desc">
+                    <header>
+                        <!-- Botão para abrir o Wizard de Nova Pesquisa -->
+                        <!-- Certifique-se que o ID da ação do wizard é 'action_open_pesquisa_aiia_search_wizard' -->
+                        <button name="%(pesquisa_aiia.action_open_pesquisa_aiia_search_wizard)d" string="Nova Pesquisa" type="action" class="btn-primary"/>
+                    </header>
+                    <!-- Campos da lista -->
+                    <field name="name" string="Termo Pesquisado"/>
+                    <field name="user_id"/>
+                    <field name="create_date"/>
+                    <field name="status"/>
+                    <field name="lead_count" string="Leads"/>
+                    <field name="next_page_token" optional="hide"/>
+                    <!-- Botão para ver resultados (leads) diretamente da lista -->
+                    <button name="action_view_results" type="object" string="Ver Leads" icon="fa-list"/>
+                </tree>
+            </field>
+        </record>
 
-    <!-- View Form para Pesquisas -->
-    <record id="view_pesquisa_aiia_search_form" model="ir.ui.view">
-        <field name="name">pesquisa.aiia.search.form</field>
-        <field name="model">pesquisa_aiia.search</field>
-        <field name="arch" type="xml">
-            <form string="Detalhes da Pesquisa AIIA">
-                 <header>
-                      <!-- *** CORREÇÃO AQUI: Chama a Ação do Servidor *** -->
-                      <button name="%(pesquisa_aiia.action_server_search_next_page)d" type="action" string="Pesquisar Próxima Página" class="btn-primary"
-                              invisible="[('next_page_token', '=', False)]"/>
-                      <field name="status" widget="statusbar" statusbar_visible="new,processing,pending_next,completed,error"/>
-                 </header>
-                <sheet>
-                     <div class="oe_button_box" name="button_box">
-                          <button name="action_view_results" type="object" class="oe_stat_button" icon="fa-list-ul">
-                               <field name="lead_count" widget="statinfo" string="Leads Encontrados"/>
-                          </button>
-                     </div>
-                     <group>
-                          <group>
-                               <field name="search_query" readonly="1"/>
-                               <field name="user_id" readonly="1"/>
-                               <field name="create_date" readonly="1"/>
-                          </group>
-                          <group>
-                               <field name="next_page_token" readonly="1"/>
-                               <field name="error_message" readonly="1" invisible="[('status', '!=', 'error')]"/>
-                          </group>
-                     </group>
-                     <notebook>
-                          <page string="Leads Encontrados">
-                               <field name="lead_ids" readonly="1">
-                                    <tree>
-                                         <field name="name"/>
-                                         <field name="phone"/>
-                                         <field name="email"/>
-                                         <field name="create_date" optional="hide"/>
-                                    </tree>
-                               </field>
-                          </page>
-                     </notebook>
-                </sheet>
-            </form>
-        </field>
-    </record>
+        <!-- View Form para Detalhes da Pesquisa -->
+        <record id="view_pesquisa_aiia_search_form" model="ir.ui.view">
+            <field name="name">pesquisa.aiia.search.form</field>
+            <field name="model">pesquisa_aiia.search</field>
+            <field name="arch" type="xml">
+                <form string="Detalhes da Pesquisa AIIA">
+                    <header>
+                         <!-- Botão para chamar a Server Action da Próxima Página -->
+                         <!-- Certifique-se que o ID da server action é 'action_server_search_next_page' -->
+                         <button name="%(pesquisa_aiia.action_server_search_next_page)d" type="action" string="Pesquisar Próxima Página" class="btn-primary"
+                                 invisible="[('next_page_token', '=', False)]"/>
+                         <!-- Status bar -->
+                         <field name="status" widget="statusbar" statusbar_visible="new,processing,pending_next,completed,error"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <!-- Botão Stat para ver leads -->
+                            <button name="action_view_results" type="object" class="oe_stat_button" icon="fa-list-ul">
+                                <field name="lead_count" widget="statinfo" string="Leads Encontrados"/>
+                            </button>
+                        </div>
+                        <group>
+                             <group>
+                                  <field name="search_query" readonly="1"/>
+                                  <field name="user_id" readonly="1"/>
+                                  <field name="create_date" readonly="1"/>
+                             </group>
+                             <group>
+                                  <field name="next_page_token" readonly="1"/>
+                                  <!-- Mensagem de erro visível apenas se status for 'error' -->
+                                  <field name="error_message" readonly="1" invisible="[('status', '!=', 'error')]"/>
+                             </group>
+                        </group>
+                        <notebook>
+                             <page string="Leads Encontrados">
+                                  <field name="lead_ids" readonly="1">
+                                       <!-- Define a visualização dos leads dentro do formulário -->
+                                       <tree>
+                                            <field name="name"/>
+                                            <field name="phone"/>
+                                            <field name="email"/>
+                                            <field name="create_date" optional="hide"/>
+                                            <!-- Adicione botões de ação rápida aqui se desejar (ex: abrir lead) -->
+                                             <button name="action_send_whatsapp" type="object" icon="fa-whatsapp" help="Enviar WhatsApp"/>
+                                             <button name="action_send_email" type="object" icon="fa-envelope-o" help="Enviar Email"/>
+                                             <button name="action_create_contact" type="object" icon="fa-user-plus" help="Criar Contato" invisible="[('contact_created', '=', True)]"/>
+                                       </tree>
+                                  </field>
+                             </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
 
-    <!-- Ação de Janela Principal MODIFICADA para Client Action -->
-    <record id="action_pesquisa_aiia_search_main_client" model="ir.actions.client">
-        <field name="name">Pesquisa AIIA</field>
-        <field name="tag">pesquisa_aiia.action_client_search</field>
-        <field name="target">current</field>
-    </record>
+        <!-- Ação de Janela Principal (Substitui a Client Action) -->
+        <record id="action_pesquisa_aiia_search_main" model="ir.actions.act_window">
+            <field name="name">Histórico de Pesquisas AIIA</field>
+            <field name="res_model">pesquisa_aiia.search</field>
+            <field name="view_mode">tree,form</field>
+            <!-- Opcional: referenciar views específicas se houver mais de uma -->
+            <field name="view_ids" eval="[(5, 0, 0),
+                (0, 0, {'view_mode': 'tree', 'view_id': ref('view_pesquisa_aiia_search_tree')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('view_pesquisa_aiia_search_form')})]"/>
+            <!-- Adicione search_view_id se você criar uma view de pesquisa -->
+            <!-- <field name="search_view_id" ref="view_pesquisa_aiia_search_filter"/> -->
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Nenhuma pesquisa realizada ainda.
+                </p><p>
+                    Clique em 'Nova Pesquisa' para iniciar uma busca externa por leads.
+                </p>
+            </field>
+        </record>
 
-     <!-- Menu Item Principal (Raiz do App) -->
-     <menuitem
-        id="menu_pesquisa_aiia_root"
-        name="Pesquisa AIIA"
-        action="action_pesquisa_aiia_search_main_client"
-        sequence="10"/>
+        <!-- Menu Item Principal (Raiz do App) - DEVE SER ATUALIZADO -->
+        <!-- Certifique-se que você tem a definição do menu raiz em algum lugar -->
+        <!-- E que ele agora aponta para 'action_pesquisa_aiia_search_main' -->
+        <!-- Exemplo (se ele estiver neste arquivo, senão modifique onde ele está): -->
+        <menuitem
+            id="menu_pesquisa_aiia_root"
+            name="Pesquisa AIIA"
+            action="action_pesquisa_aiia_search_main" 
+            sequence="10"/>
 
-     <!-- Mantém o submenu para ver TODOS os leads, sem filtro -->
-     <menuitem
-        id="menu_pesquisa_aiia_leads_all"
-        name="Todos os Leads Recebidos"
-        parent="menu_pesquisa_aiia_root"
-        action="pesquisa_aiia.action_pesquisa_aiia_leads"
-        sequence="20"/>
+        <!-- Mantém o submenu para ver TODOS os leads, sem filtro (se já existia) -->
+        <menuitem
+            id="menu_pesquisa_aiia_leads_all"
+            name="Todos os Leads Recebidos"
+            parent="menu_pesquisa_aiia_root"
+            action="pesquisa_aiia.action_pesquisa_aiia_leads"
+            sequence="20"/>
 
-    <!-- As views e actions para o botão criar foram removidas/ajustadas -->
-    <!-- A ação Client Action é agora a principal -->
+         <!-- Mantém o submenu para Configurações (se já existia) -->
+         <menuitem
+            id="menu_pesquisa_aiia_config"
+            name="Configurações"
+            parent="menu_pesquisa_aiia_root"
+            sequence="99"
+            action="action_pesquisa_aiia_config_settings"
+            groups="base.group_system"/>
 
+    </data>
 </odoo>
