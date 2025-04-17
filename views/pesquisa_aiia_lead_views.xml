@@ -6,7 +6,6 @@
         <field name="name">pesquisa.aiia.lead.tree</field>
         <field name="model">pesquisa_aiia.lead</field>
         <field name="arch" type="xml">
-            <!-- Adicionado tracking para atualizar a view quando os campos mudam -->
             <tree string="Leads Pesquisa AIIA" decoration-muted="contact_created==True or opportunity_created==True">
                 <field name="search_id" optional="show" readonly="1"/>
                 <field name="name" string="Empresa"/>
@@ -17,22 +16,20 @@
                 <field name="use_default_message" optional="hide"/>
                 <field name="message_text" string="Mensagem Customizada" optional="hide"/>
                 <field name="contact_created" string="Contato Criado?"/>
-                <field name="opportunity_created" string="Oportunidade Criada?"/> <!-- Campo adicionado -->
+                <field name="opportunity_created" string="Oportunidade Criada?"/>
                  <!-- Botões de Ação -->
                 <button name="action_send_whatsapp" type="object" icon="fa-whatsapp" help="Enviar mensagem via WhatsApp"/>
                 <button name="action_send_email" type="object" icon="fa-envelope-o" help="Enviar E-mail"/>
-                <!-- Botão Criar Contato (Ajustado) -->
                 <button name="action_create_contact"
                         type="object"
                         string="Criar Contato"
                         icon="fa-user-plus"
                         help="Criar Contato no Odoo (res.partner)"
                         column_invisible="[('contact_created', '=', True)]"/>
-                 <!-- NOVO Botão Criar Oportunidade -->
                 <button name="action_create_opportunity"
                         type="object"
                         string="Criar Oportunidade"
-                        icon="fa-star" 
+                        icon="fa-star"
                         help="Criar Oportunidade no CRM (crm.lead)"
                         column_invisible="[('opportunity_created', '=', True)]"/>
             </tree>
@@ -46,7 +43,6 @@
         <field name="arch" type="xml">
             <form string="Lead Pesquisa AIIA">
                  <header>
-                     <!-- Pode adicionar botões importantes aqui também se fizer sentido -->
                  </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -56,27 +52,22 @@
                          <button name="action_send_email" type="object" class="oe_stat_button" icon="fa-envelope-o">
                             E-mail
                         </button>
-                         <!-- Botão Criar Contato (Ajustado) -->
                          <button name="action_create_contact"
                                  type="object"
                                  class="oe_stat_button"
                                  icon="fa-user-plus"
                                  invisible="[('contact_created', '=', True)]">
-                             <!-- Adicionado para exibir o nome do contato se criado -->
                              <field name="created_partner_id" widget="statinfo" string="Ver Contato"
                                     invisible="[('contact_created', '=', False)]"/>
                              <span invisible="[('contact_created', '=', True)]">Criar Contato</span>
                         </button>
-                         <!-- NOVO Botão Criar Oportunidade -->
                          <button name="action_create_opportunity"
                                  type="object"
                                  class="oe_stat_button"
                                  icon="fa-star"
                                  invisible="[('opportunity_created', '=', True)]">
-                             <!-- Poderia ter um campo Many2one para linkar e exibir aqui -->
                             Criar Oportunidade
                         </button>
-                         <!-- Botão para voltar para a pesquisa origem -->
                          <button name="%(pesquisa_aiia.action_pesquisa_aiia_search_main)d" type="action"
                                  class="oe_stat_button" icon="fa-search"
                                  context="{'search_default_id': search_id, 'active_id': search_id}"
@@ -119,7 +110,6 @@
                          </page>
                     </notebook>
                 </sheet>
-                 <!-- Adicionando o chatter -->
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
                     <field name="activity_ids" widget="mail_activity"/>
@@ -129,7 +119,7 @@
         </field>
     </record>
 
-    <!-- Action Window para "Todos os Leads" (Sem mudanças aqui) -->
+    <!-- Action Window para "Todos os Leads" (Corrigido) -->
     <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
         <field name="name">Todos os Leads</field>
         <field name="res_model">pesquisa_aiia.lead</field>
@@ -137,15 +127,18 @@
         <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>
         <field name="context">{}</field>
         <field name="help" type="html">
+            <!-- *** CORREÇÃO AQUI *** -->
             <p class="o_view_nocontent_smiling_face">
                 Nenhum lead recebido ainda.
-            </p><p>
+            </p>
+            <p>
                 Use a opção 'Nova Pesquisa' para buscar leads ou configure o webhook no N8N.
             </p>
+            <!-- *** FIM DA CORREÇÃO *** -->
         </field>
     </record>
 
-    <!-- Menu Items (Sem mudanças aqui) -->
+    <!-- Menu Items -->
     <menuitem
         id="menu_pesquisa_aiia_all_leads"
         name="Todos os Leads"
