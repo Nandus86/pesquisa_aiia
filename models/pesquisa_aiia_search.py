@@ -11,14 +11,12 @@ class PesquisaAiiaSearch(models.Model):
     _name = 'pesquisa_aiia.search'
     _description = 'Registro de Pesquisa AIIA'
     _order = 'create_date desc'
-    # *** ADICIONADO: Herança para habilitar o chatter ***
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    search_query = fields.Text(string='Consulta Original', readonly=True, required=True, tracking=True) # Adicionado tracking
+    search_query = fields.Text(string='Consulta Original', readonly=True, required=True, tracking=True)
     name = fields.Char(string='Termo Pesquisado (Resumo)', compute='_compute_name', store=True, readonly=True)
-    user_id = fields.Many2one('res.users', string='Iniciado por', default=lambda self: self.env.user, readonly=True, tracking=True) # Adicionado tracking
+    user_id = fields.Many2one('res.users', string='Iniciado por', default=lambda self: self.env.user, readonly=True, tracking=True)
     create_date = fields.Datetime(string='Data da Criação', readonly=True, default=fields.Datetime.now)
-    # --- TOKEN FIELD ---
     next_page_token = fields.Text(string='Token Próxima Página', readonly=True, copy=False,
                                  help="Token fornecido pela API externa para buscar a próxima página de resultados.")
     status = fields.Selection([
@@ -27,12 +25,11 @@ class PesquisaAiiaSearch(models.Model):
         ('pending_next', 'Aguardando Próxima Página'),
         ('completed', 'Concluída'),
         ('error', 'Erro')
-    ], string='Status', default='new', readonly=True, copy=False, index=True, tracking=True) # Adicionado tracking
+    ], string='Status', default='new', readonly=True, copy=False, index=True, tracking=True)
     lead_ids = fields.One2many('pesquisa_aiia.lead', 'search_id', string='Leads Encontrados')
+    # *** CORREÇÃO AQUI: Simplificando o método de cálculo ***
     lead_count = fields.Integer(string='Nº Leads', compute='_compute_lead_count')
-    error_message = fields.Text(string='Mensagem de Erro', readonly=True, tracking=True) # Adicionado tracking
-    # Opcional: Armazenar a mensagem inicial
-    # initial_message = fields.Text(string='Mensagem Inicial Usada', readonly=True)
+    error_message = fields.Text(string='Mensagem de Erro', readonly=True, tracking=True)
 
     @api.depends('search_query')
     def _compute_name(self):
@@ -43,15 +40,11 @@ class PesquisaAiiaSearch(models.Model):
             else:
                 search.name = _('Pesquisa Vazia')
 
+    # *** CORREÇÃO AQUI: Usando search_count para simplicidade e evitar erro de agregação ***
     @api.depends('lead_ids')
     def _compute_lead_count(self):
-        lead_data = self.env['pesquisa_aiia.lead']._read_group(
-            [('search_id', 'in', self.ids)],
-            ['search_id'], ['search_id'])
-        mapped_data = {data['search_id'][0]: data['search_id_count'] for data in lead_data}
         for search in self:
-            search.lead_count = mapped_data.get(search.id, 0)
-
+            search.lead_count = self.env['pesquisa_aiia.lead'].search_count([('search_id', '=', search.id)])
 
     def _get_n8n_trigger_url(self):
         config_params = self.env['ir.config_parameter'].sudo()
@@ -67,28 +60,28 @@ class PesquisaAiiaSearch(models.Model):
 
         _logger.info(f"Enviando payload para N8N (Search ID: {self.id}): {json.dumps(payload)}")
 
-        # Guarda o estado anterior para log no chatter
         old_status = self.status
         new_status = 'processing'
 
         write_vals = {'status': new_status, 'error_message': False}
+        # Usar _write para evitar recursão infinita se o tracking estiver no status
+        # ou garantir que a lógica de log do write não seja acionada duas vezes.
+        # Neste caso, como temos um write customizado, vamos chamá-lo para logar.
         self.write(write_vals)
-        # Loga a mudança de status no chatter
-        self.message_post(body=_("Status alterado de '%s' para '%s' ao enviar requisição para N8N.") % (old_status, new_status))
+        # O log já é feito pelo método write sobrescrito
+        # self.message_post(body=_("Status alterado de '%s' para '%s' ao enviar requisição para N8N.") % (old_status, new_status))
         self.env.cr.commit()
 
         try:
             response = requests.post(n8n_trigger_url, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             _logger.info(f"Solicitação (Search ID: {self.id}) enviada com sucesso para N8N. Resposta N8N (status {response.status_code}): {response.text[:200]}")
-            # Não loga sucesso no chatter aqui, espera a resposta do /update_search
             return True
 
         except requests.exceptions.Timeout:
             _logger.error(f"Timeout ao enviar solicitação (Search ID: {self.id}): {n8n_trigger_url}")
             error_msg = _("Timeout N8N: O serviço externo demorou muito para responder.")
-            self.write({'status': 'error', 'error_message': error_msg})
-            self.message_post(body=_("Erro: Timeout ao conectar com N8N. %s") % error_msg, message_type='comment', subtype_xmlid='mail.mt_comment')
+            self.write({'status': 'error', 'error_message': error_msg}) # Write chamará message_post
             self.env.cr.commit()
             raise UserError(error_msg)
         except requests.exceptions.RequestException as e:
@@ -98,42 +91,32 @@ class PesquisaAiiaSearch(models.Model):
                  try: error_details = e.response.json()
                  except json.JSONDecodeError: error_details = e.response.text[:500]
             error_msg_user = _("Erro N8N: %s", error_details)
-            self.write({'status': 'error', 'error_message': error_msg_user})
-            self.message_post(body=_("Erro ao enviar para N8N: %s") % error_msg_user, message_type='comment', subtype_xmlid='mail.mt_comment')
+            self.write({'status': 'error', 'error_message': error_msg_user}) # Write chamará message_post
             self.env.cr.commit()
             raise UserError(error_msg_user)
         except Exception as e:
              _logger.exception(f"Erro inesperado ao enviar para N8N (Search ID: {self.id}):")
              error_msg = _("Erro inesperado: %s", str(e))
-             self.write({'status': 'error', 'error_message': error_msg})
-             self.message_post(body=_("Erro inesperado: %s") % error_msg, message_type='comment', subtype_xmlid='mail.mt_comment')
+             self.write({'status': 'error', 'error_message': error_msg}) # Write chamará message_post
              self.env.cr.commit()
              raise UserError(error_msg)
 
     @api.model_create_multi
     def create(self, vals_list):
-        # Sobrescreve o create para logar no chatter
         records = super(PesquisaAiiaSearch, self).create(vals_list)
         for record in records:
             record.message_post(body=_("Pesquisa criada por %s com o termo: '%s'") % (record.user_id.name, record.search_query))
         return records
 
-    # --- MÉTODO PARA INICIAR NOVA PESQUISA (Chamado pelo Wizard) ---
     @api.model
     def start_new_search(self, query, message=None):
-        """
-        Cria um novo registro de pesquisa e envia a solicitação INICIAL para N8N.
-        Retorna o ID do registro criado.
-        """
         if not query or not query.strip():
             raise ValidationError(_("O termo de pesquisa não pode estar vazio."))
 
-        # Create é chamado antes de _send_request_to_n8n, o log de criação já acontece lá
         search_record = self.create({
             'search_query': query.strip(),
             'user_id': self.env.user.id,
             'status': 'new',
-            # 'initial_message': message,
         })
         _logger.info(f"Novo registro de pesquisa criado ID: {search_record.id} para query: '{query}'")
 
@@ -149,14 +132,9 @@ class PesquisaAiiaSearch(models.Model):
             search_record._send_request_to_n8n(payload)
             return search_record.id
         except (UserError, ValidationError) as e:
-            # O erro já foi logado no chatter pelo _send_request_to_n8n
             raise e
 
-    # --- MÉTODO PARA BUSCAR PRÓXIMA PÁGINA ---
     def search_next_page(self):
-        """
-        Envia a solicitação da PRÓXIMA PÁGINA para N8N usando o token armazenado.
-        """
         self.ensure_one()
 
         if not self.next_page_token:
@@ -169,7 +147,6 @@ class PesquisaAiiaSearch(models.Model):
              raise UserError(_("Esta pesquisa já foi concluída."))
 
         _logger.info(f"Solicitando próxima página para Search ID: {self.id} usando token.")
-        # Loga a intenção no chatter
         self.message_post(body=_("Solicitando próxima página de resultados."))
 
         payload = {
@@ -181,13 +158,10 @@ class PesquisaAiiaSearch(models.Model):
 
         try:
              self._send_request_to_n8n(payload)
-             # Sucesso no envio, não precisa logar aqui, espera o update
              return True
         except (UserError, ValidationError) as e:
-             # O erro já foi logado no chatter pelo _send_request_to_n8n
              raise e
 
-    # --- Ação para ver resultados ---
     def action_view_results(self):
         self.ensure_one()
         action = self.env['ir.actions.act_window']._for_xml_id('pesquisa_aiia.action_pesquisa_aiia_leads')
@@ -197,26 +171,32 @@ class PesquisaAiiaSearch(models.Model):
         action['context'] = {'default_search_id': self.id, 'search_default_search_id': self.id}
         return action
 
-    # --- Sobrescrevendo o método write para logar mudanças de status no chatter ---
     def write(self, vals):
-        # Guarda os status antigos antes de escrever
-        old_status_map = {rec.id: rec.status for rec in self}
+        old_status_map = {}
+        if 'status' in vals:
+            # Somente buscar o status antigo se ele estiver sendo alterado
+            old_status_map = {rec.id: rec.status for rec in self}
+
         res = super(PesquisaAiiaSearch, self).write(vals)
 
-        # Verifica se o status foi alterado no write
+        # Logar mudança de status APÓS a escrita ser bem sucedida
         if 'status' in vals:
             new_status = vals['status']
-            for record in self:
+            for record in self.filtered(lambda r: r.id in old_status_map): # Apenas nos registros que tiveram status avaliado
                 old_status = old_status_map.get(record.id)
-                # Loga apenas se o status realmente mudou e não é a escrita inicial do _send_request_to_n8n (já logada)
-                if old_status != new_status and old_status != 'new': # Evita log duplo na criação/envio inicial
-                    message = _("Status alterado de '%s' para '%s'") % (old_status, new_status)
-                    if new_status == 'error' and 'error_message' in vals and vals.get('error_message'):
-                         message += _(" - Erro: %s") % vals['error_message']
-                    elif new_status == 'pending_next' and 'next_page_token' in vals and vals.get('next_page_token'):
+                # Loga apenas se o status realmente mudou
+                if old_status != new_status:
+                    message = _("Status alterado de '%s' para '%s'") % (self.env['pesquisa_aiia.search']._fields['status']._description_selection(self.env)[old_status],
+                                                                          self.env['pesquisa_aiia.search']._fields['status']._description_selection(self.env)[new_status])
+                    error_msg_val = vals.get('error_message', record.error_message) # Pega da escrita ou do registro
+                    next_page_token_val = vals.get('next_page_token', record.next_page_token)
+
+                    if new_status == 'error' and error_msg_val:
+                         message += _(" - Erro: %s") % error_msg_val
+                    elif new_status == 'pending_next' and next_page_token_val:
                          message += _(". Próxima página disponível.")
                     elif new_status == 'completed':
                          message += _(". Pesquisa concluída.")
 
-                    record.message_post(body=message)
+                    record.message_post(body=message, message_type='comment', subtype_xmlid='mail.mt_comment')
         return res
