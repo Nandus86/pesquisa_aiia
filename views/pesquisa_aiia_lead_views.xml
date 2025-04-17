@@ -119,7 +119,7 @@
         </field>
     </record>
 
-    <!-- Action Window para "Todos os Leads" (Corrigido) -->
+    <!-- Action Window para "Todos os Leads" (Corrigido novamente) -->
     <record id="action_pesquisa_aiia_leads" model="ir.actions.act_window">
         <field name="name">Todos os Leads</field>
         <field name="res_model">pesquisa_aiia.lead</field>
@@ -127,14 +127,13 @@
         <field name="search_view_id" ref="view_pesquisa_aiia_lead_search"/>
         <field name="context">{}</field>
         <field name="help" type="html">
-            <!-- *** CORREÇÃO AQUI *** -->
+            <!-- *** Comentários removidos daqui *** -->
             <p class="o_view_nocontent_smiling_face">
                 Nenhum lead recebido ainda.
             </p>
             <p>
                 Use a opção 'Nova Pesquisa' para buscar leads ou configure o webhook no N8N.
             </p>
-            <!-- *** FIM DA CORREÇÃO *** -->
         </field>
     </record>
 
