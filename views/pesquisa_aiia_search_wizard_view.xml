@@ -8,18 +8,32 @@
                 <group>
                     <field name="search_query"/>
                 </group>
+                <group string="Mensagem Inicial (Opcional)">
+                     <field name="use_default_message"/>
+                     <!-- O campo 'custom_message' só aparece se 'use_default_message' for desmarcado -->
+                     <!-- Usamos 'invisible' que funciona bem no Odoo 17+ -->
+                     <!-- Adicionado required para garantir preenchimento se custom selecionado -->
+                     <field name="custom_message"
+                            placeholder="Digite a mensagem a ser considerada na pesquisa/contato inicial..."
+                            invisible="[('use_default_message', '=', True)]"
+                            required="[('use_default_message', '=', False)]"/>
+                      <!-- Campo auxiliar invisível apenas para controle da visibilidade -->
+                      <field name="show_custom_message" invisible="1"/>
+                </group>
                 <footer>
-                    <button name="action_start_search" string="Pesquisar" type="object" class="btn-primary"/>
-                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    <!-- O botão chama a action definida no modelo python -->
+                    <button name="action_start_search" string="Iniciar Pesquisa" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel" data-hotkey="z"/>
                 </footer>
             </form>
         </field>
     </record>
 
-    <record id="action_open_pesquisa_aiia_search_wizard" model="ir.actions.act_window">
-        <field name="name">Nova Pesquisa AIIA</field>
-        <field name="res_model">pesquisa_aiia.search.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field> <!-- Abre como pop-up -->
-    </record>
+     <!-- Ação que abre o wizard (permanece a mesma) -->
+     <record id="action_open_pesquisa_aiia_search_wizard" model="ir.actions.act_window">
+         <field name="name">Nova Pesquisa AIIA</field>
+         <field name="res_model">pesquisa_aiia.search.wizard</field>
+         <field name="view_mode">form</field>
+         <field name="target">new</field> <!-- Abre como pop-up -->
+     </record>
 </odoo>
