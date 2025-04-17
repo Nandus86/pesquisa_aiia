@@ -24,14 +24,12 @@
                         type="object"
                         string="Criar Contato"
                         icon="fa-user-plus"
-                        help="Criar Contato no Odoo (res.partner)"
-                        column_invisible="[('contact_created', '=', True)]"/>
+                        help="Criar Contato no Odoo (res.partner)"/>
                 <button name="action_create_opportunity"
                         type="object"
                         string="Criar Oportunidade"
                         icon="fa-star"
-                        help="Criar Oportunidade no CRM (crm.lead)"
-                        column_invisible="[('opportunity_created', '=', True)]"/>
+                        help="Criar Oportunidade no CRM (crm.lead)"/>
             </tree>
         </field>
     </record>
@@ -55,8 +53,7 @@
                          <button name="action_create_contact"
                                  type="object"
                                  class="oe_stat_button"
-                                 icon="fa-user-plus"
-                                 invisible="[('contact_created', '=', True)]">
+                                 icon="fa-user-plus">
                              <field name="created_partner_id" widget="statinfo" string="Ver Contato"
                                     invisible="[('contact_created', '=', False)]"/>
                              <span invisible="[('contact_created', '=', True)]">Criar Contato</span>
@@ -64,8 +61,7 @@
                          <button name="action_create_opportunity"
                                  type="object"
                                  class="oe_stat_button"
-                                 icon="fa-star"
-                                 invisible="[('opportunity_created', '=', True)]">
+                                 icon="fa-star">
                             Criar Oportunidade
                         </button>
                          <button name="%(pesquisa_aiia.action_pesquisa_aiia_search_main)d" type="action"
