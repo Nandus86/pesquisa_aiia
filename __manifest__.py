@@ -8,7 +8,7 @@
         armazená-las como leads e fornecer ações rápidas (WhatsApp, Email, etc.).
     """,
     'category': 'Sales/CRM',
-    'author': 'Fernando Dias - v2.0.13',
+    'author': 'Fernando Dias - v3.0.1',
     'website': '',
     'license': 'LGPL-3', 
     'depends': [
