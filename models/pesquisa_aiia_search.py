@@ -27,7 +27,6 @@ class PesquisaAiiaSearch(models.Model):
         ('error', 'Erro')
     ], string='Status', default='new', readonly=True, copy=False, index=True, tracking=True)
     lead_ids = fields.One2many('pesquisa_aiia.lead', 'search_id', string='Leads Encontrados')
-    # *** CORREÇÃO AQUI: Simplificando o método de cálculo ***
     lead_count = fields.Integer(string='Nº Leads', compute='_compute_lead_count')
     error_message = fields.Text(string='Mensagem de Erro', readonly=True, tracking=True)
 
@@ -40,9 +39,9 @@ class PesquisaAiiaSearch(models.Model):
             else:
                 search.name = _('Pesquisa Vazia')
 
-    # *** CORREÇÃO AQUI: Usando search_count para simplicidade e evitar erro de agregação ***
     @api.depends('lead_ids')
     def _compute_lead_count(self):
+        # Usando search_count é mais simples e geralmente eficiente para esta contagem
         for search in self:
             search.lead_count = self.env['pesquisa_aiia.lead'].search_count([('search_id', '=', search.id)])
 
@@ -60,28 +59,25 @@ class PesquisaAiiaSearch(models.Model):
 
         _logger.info(f"Enviando payload para N8N (Search ID: {self.id}): {json.dumps(payload)}")
 
-        old_status = self.status
-        new_status = 'processing'
-
-        write_vals = {'status': new_status, 'error_message': False}
-        # Usar _write para evitar recursão infinita se o tracking estiver no status
-        # ou garantir que a lógica de log do write não seja acionada duas vezes.
-        # Neste caso, como temos um write customizado, vamos chamá-lo para logar.
+        # Definindo o status para 'processing' antes de enviar
+        write_vals = {'status': 'processing', 'error_message': False}
+        # Chamamos write aqui, que por sua vez chamará message_post (se status mudar)
         self.write(write_vals)
-        # O log já é feito pelo método write sobrescrito
-        # self.message_post(body=_("Status alterado de '%s' para '%s' ao enviar requisição para N8N.") % (old_status, new_status))
+        # Commit para garantir que o status seja atualizado antes da chamada externa
         self.env.cr.commit()
 
         try:
             response = requests.post(n8n_trigger_url, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
             _logger.info(f"Solicitação (Search ID: {self.id}) enviada com sucesso para N8N. Resposta N8N (status {response.status_code}): {response.text[:200]}")
+            # Não posta mensagem de sucesso aqui, espera o webhook de update
             return True
 
         except requests.exceptions.Timeout:
             _logger.error(f"Timeout ao enviar solicitação (Search ID: {self.id}): {n8n_trigger_url}")
             error_msg = _("Timeout N8N: O serviço externo demorou muito para responder.")
-            self.write({'status': 'error', 'error_message': error_msg}) # Write chamará message_post
+            # Atualiza status e loga erro via write
+            self.write({'status': 'error', 'error_message': error_msg})
             self.env.cr.commit()
             raise UserError(error_msg)
         except requests.exceptions.RequestException as e:
@@ -91,21 +87,25 @@ class PesquisaAiiaSearch(models.Model):
                  try: error_details = e.response.json()
                  except json.JSONDecodeError: error_details = e.response.text[:500]
             error_msg_user = _("Erro N8N: %s", error_details)
-            self.write({'status': 'error', 'error_message': error_msg_user}) # Write chamará message_post
+            # Atualiza status e loga erro via write
+            self.write({'status': 'error', 'error_message': error_msg_user})
             self.env.cr.commit()
             raise UserError(error_msg_user)
         except Exception as e:
              _logger.exception(f"Erro inesperado ao enviar para N8N (Search ID: {self.id}):")
              error_msg = _("Erro inesperado: %s", str(e))
-             self.write({'status': 'error', 'error_message': error_msg}) # Write chamará message_post
+             # Atualiza status e loga erro via write
+             self.write({'status': 'error', 'error_message': error_msg})
              self.env.cr.commit()
              raise UserError(error_msg)
 
     @api.model_create_multi
     def create(self, vals_list):
+        # Loga a criação após o registro ser efetivamente criado
         records = super(PesquisaAiiaSearch, self).create(vals_list)
         for record in records:
-            record.message_post(body=_("Pesquisa criada por %s com o termo: '%s'") % (record.user_id.name, record.search_query))
+            record.message_post(body=_("Pesquisa criada por %s com o termo: '%s'") % (record.user_id.name, record.search_query),
+                                message_type='comment', subtype_xmlid='mail.mt_comment')
         return records
 
     @api.model
@@ -113,6 +113,7 @@ class PesquisaAiiaSearch(models.Model):
         if not query or not query.strip():
             raise ValidationError(_("O termo de pesquisa não pode estar vazio."))
 
+        # Create chamará o message_post de criação
         search_record = self.create({
             'search_query': query.strip(),
             'user_id': self.env.user.id,
@@ -129,9 +130,11 @@ class PesquisaAiiaSearch(models.Model):
         }
 
         try:
+            # _send_request_to_n8n atualizará o status para 'processing' e logará
             search_record._send_request_to_n8n(payload)
             return search_record.id
         except (UserError, ValidationError) as e:
+            # Erros já logados por _send_request_to_n8n
             raise e
 
     def search_next_page(self):
@@ -147,7 +150,9 @@ class PesquisaAiiaSearch(models.Model):
              raise UserError(_("Esta pesquisa já foi concluída."))
 
         _logger.info(f"Solicitando próxima página para Search ID: {self.id} usando token.")
-        self.message_post(body=_("Solicitando próxima página de resultados."))
+        # Loga a intenção ANTES de enviar
+        self.message_post(body=_("Solicitando próxima página de resultados."),
+                          message_type='comment', subtype_xmlid='mail.mt_comment')
 
         payload = {
             'search_id': self.id,
@@ -157,9 +162,11 @@ class PesquisaAiiaSearch(models.Model):
         }
 
         try:
+             # _send_request_to_n8n atualizará o status para 'processing' e logará a mudança
              self._send_request_to_n8n(payload)
              return True
         except (UserError, ValidationError) as e:
+             # Erros já logados por _send_request_to_n8n
              raise e
 
     def action_view_results(self):
@@ -168,29 +175,43 @@ class PesquisaAiiaSearch(models.Model):
         action['name'] = _('Leads da Pesquisa: %s') % self.name
         action['display_name'] = action['name']
         action['domain'] = [('search_id', '=', self.id)]
-        action['context'] = {'default_search_id': self.id, 'search_default_search_id': self.id}
+        # Adiciona contexto para pré-filtrar a busca na view de leads
+        action['context'] = {'default_search_id': self.id,
+                             'search_default_search_id': self.id,
+                             'create': False} # Opcional: desabilitar criação direta de leads a partir daqui
         return action
 
     def write(self, vals):
+        # Mapeia o status *antes* da escrita, apenas se o status estiver sendo alterado
         old_status_map = {}
         if 'status' in vals:
-            # Somente buscar o status antigo se ele estiver sendo alterado
             old_status_map = {rec.id: rec.status for rec in self}
 
         res = super(PesquisaAiiaSearch, self).write(vals)
 
         # Logar mudança de status APÓS a escrita ser bem sucedida
         if 'status' in vals:
+            # *** CORREÇÃO AQUI: Obter o dicionário de seleção ***
+            selection_dict = dict(self._fields['status']._description_selection(self.env))
+
             new_status = vals['status']
-            for record in self.filtered(lambda r: r.id in old_status_map): # Apenas nos registros que tiveram status avaliado
+            # Itera apenas nos registros que *realmente* tiveram o status avaliado na entrada do método
+            for record in self.filtered(lambda r: r.id in old_status_map):
                 old_status = old_status_map.get(record.id)
+
                 # Loga apenas se o status realmente mudou
                 if old_status != new_status:
-                    message = _("Status alterado de '%s' para '%s'") % (self.env['pesquisa_aiia.search']._fields['status']._description_selection(self.env)[old_status],
-                                                                          self.env['pesquisa_aiia.search']._fields['status']._description_selection(self.env)[new_status])
-                    error_msg_val = vals.get('error_message', record.error_message) # Pega da escrita ou do registro
+                    # *** CORREÇÃO AQUI: Usar o dicionário para buscar as labels ***
+                    old_label = selection_dict.get(old_status, old_status) # Usa a chave como fallback
+                    new_label = selection_dict.get(new_status, new_status) # Usa a chave como fallback
+
+                    message = _("Status alterado de '%s' para '%s'") % (old_label, new_label)
+
+                    # Pega a mensagem de erro ou token dos valores sendo escritos OU do próprio registro
+                    error_msg_val = vals.get('error_message', record.error_message)
                     next_page_token_val = vals.get('next_page_token', record.next_page_token)
 
+                    # Adiciona detalhes à mensagem de log
                     if new_status == 'error' and error_msg_val:
                          message += _(" - Erro: %s") % error_msg_val
                     elif new_status == 'pending_next' and next_page_token_val:
@@ -198,5 +219,6 @@ class PesquisaAiiaSearch(models.Model):
                     elif new_status == 'completed':
                          message += _(". Pesquisa concluída.")
 
+                    # Posta a mensagem no chatter
                     record.message_post(body=message, message_type='comment', subtype_xmlid='mail.mt_comment')
         return res
