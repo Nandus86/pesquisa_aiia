@@ -156,6 +156,7 @@ class PesquisaAiiaSearch(models.Model):
 
         payload = {
             'search_id': self.id,
+            'query': self.search_query,
             'next_page_token': self.next_page_token,
             'odoo_user_id': self.user_id.id,
             'odoo_user_name': self.user_id.name
